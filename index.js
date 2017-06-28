@@ -33,7 +33,6 @@ var Cookie = tough.Cookie;
 axiosCookieJarSupport(axios);
 const cookieJar = new tough.CookieJar();
 
-
 var instance = axios.create({
   timeout: 30000,
   jar: cookieJar, // tough.CookieJar or boolean
@@ -46,131 +45,149 @@ var instance = axios.create({
   }
 });
 
-var xml2 = '<?xml version="1.0" encoding="utf-8"?>' +
-  '<root>' +
-  '<address>' +
-  '<name>Joe Tester1</name>' +
-  '<street>Baker street 5</street>' +
-  '</address>' +
-  '<address>' +
-  '<name>Joe Tester2</name>' +
-  '<street>Baker street 5</street>' +
-  '</address>' +
-  '</root>';
-
-
-
 
 var aut = function(addr) {
   return instance.post(addr)
 };
-//
-// aut(PSI_ROZA.HOST +
-//   '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-//   '&version=' + GLOBALS.VERSION +
-//   '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-//   GLOBALS.DEVID).then(res => {
-//     var obj = parse(res.data);
-//     //console.log(obj);
-//     console.log(obj['root']['children'][0]['children'][0]['content']);
-// return obj['root']['children'][2]['children'][0]['content'];
-//
-//   }).then(mGUID=>{
-// console.log(mGUID);
-//       return aut(PSI_ROZA.HOST +
-//         "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-//         mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-//         ".10&appType=iPhone").then(()=>{return mGUID;})
-//
-//   }).then(mGUID=>{
-//     console.log(mGUID);
-//       return aut(PSI_ROZA.HOST +
-//         "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-//         mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-//         ".10&appType=iPhone" +
-//         "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-//         GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-//           var obj = parse(res.data);
-//           //console.log(res.data);
-//           return obj['root']['children'][2]['children'][1]['content'];
-//         })
-//
-//   }).then(token=>{
-//     console.log(token);
-//     return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-//   "/postCSALogin.do?token=" + token).then(res => {
-//     var obj = parse(res.data);
-//     console.log(res.data);
-//     //return obj['root']['children'][2]['children'][1]['content'];
-//     console.log(obj['root']['children'][2]['children'][3]['content']);
-//   });
-//   })
-//
-//   .catch(function(error) {
-//       console.log(error)
-//     });
-
 
 
 exports.handler = function(event, context, callback) {
   var alexa = Alexa.handler(event, context);
-  alexa.registerHandlers(handlers);
+  alexa.registerHandlers(newSessionHandlers,guessModeHandlers,startGameHandlers);
   alexa.execute();
 };
 
-var handlers = {
-  'LaunchRequest': function() {
-    this.emit('SayHello');
-  },
-  'HelloWorldIntent': function() {
-    this.emit('SayHello');
-  },
-  SayHello: function() {
-    aut(PSI_ROZA.HOST +
-        '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-        '&version=' + GLOBALS.VERSION +
-        '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-        GLOBALS.DEVID).then(res => {
-        var obj = parse(res.data);
-        //console.log(obj);
-        console.log(obj['root']['children'][0]['children'][0]['content']);
-        return obj['root']['children'][2]['children'][0]['content'];
+// var handlers = {
+  // 'LaunchRequest': function() {
+  //   this.emit('SayHello');
+  // },
+  //
+  // SayHello: function() {
+  //   this.emit(':ask', 999, 222);
+  // },
+//   travelintent: function() {
+//     this.emit(':ask', "from handlers", 222);
+//   }
+// };
 
-      }).then(mGUID => {
-        return aut(PSI_ROZA.HOST +
-          "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-          mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-          ".10&appType=iPhone").then(() => {
-          return mGUID;
-        })
-      }).then(mGUID => {
-        return aut(PSI_ROZA.HOST +
-          "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-          mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-          ".10&appType=iPhone" +
-          "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-          GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-          var obj = parse(res.data);
-          //console.log(res.data);
-          return obj['root']['children'][2]['children'][1]['content'];
-        })
-      }).then(token => {
-            return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-          "/postCSALogin.do?token=" + token).then(res => {
-            var obj = parse(res.data);
-
-            //console.log(res.data);
-            var v= (obj['root']['children'][2]['children'][3]['content']);
-        this.emit(':ask', v, 333);
-      })})
-      .catch(function(error) {
-        this.emit(':ask', 666, 333);
-        console.log(error)
-      });
-
-
-  },
-  travelintent: function() {
-    this.emit(':ask', 222, 222);
-  }
+var states = {
+    GUESSMODE: '_GUESSMODE', // User is trying to guess the number.
+    STARTMODE: '_STARTMODE',  // Prompt the user to start or restart the game.
+    ENDMODE:'_ENDMODE'
 };
+
+var newSessionHandlers = {
+    'NewSession': function() {
+        this.handler.state = states.STARTMODE;
+        this.emit(':ask', 'Welcome ');
+            //'Say yes to start the game or no to quit.
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
+          'NewSession': function() {
+            this.emit('NewSession'); // Uses the handler in newSessionHandlers
+          },
+          'HelloWorldIntent': function() {
+
+            aut(PSI_ROZA.HOST +
+              '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
+              '&version=' + GLOBALS.VERSION +
+              '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
+              GLOBALS.DEVID).then(res => {
+                var obj = parse(res.data);
+                //console.log(obj);
+                console.log(obj['root']['children'][0]['children'][0]['content']);
+            return obj['root']['children'][2]['children'][0]['content'];
+
+              }).then(mGUID=>{
+            console.log(mGUID);
+                  return aut(PSI_ROZA.HOST +
+                    "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
+                    mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
+                    ".10&appType=iPhone").then(()=>{return mGUID;})
+
+              }).then(mGUID=>{
+                console.log(mGUID);
+                  this.attributes['mGUID'] = mGUID;
+                  return aut(PSI_ROZA.HOST +
+                    "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
+                    mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
+                    ".10&appType=iPhone" +
+                    "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
+                    GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
+                      var obj = parse(res.data);
+                      //console.log(res.data);
+                      return obj['root']['children'][2]['children'][1]['content'];
+                    })
+
+              }).then(token=>{
+                console.log(token);
+                return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
+              "/postCSALogin.do?token=" + token).then(res => {
+                var obj = parse(res.data);
+                console.log(res.data);
+                //return obj['root']['children'][2]['children'][1]['content'];
+                var v = obj['root']['children'][2]['children'][3]['content'];
+                this.attributes['token'] = token;
+                this.handler.state = states.GUESSMODE;
+                this.emit(':ask', token, token);
+              });
+              })
+
+              .catch(function(error) {
+                  console.log(error)
+                });
+
+
+
+          },
+
+          travelintent: function() {
+            var self = this;
+            this.handler.state = states.GUESSMODE;
+            //this.attributes['name'] = this.event.request.intent.slots.MySlot.value;
+            //this.emit(':ask', 'Myitem', 'Try saying a number.');
+            //var e = this.event.request.intent.slots.About.value.toLowerCase();
+            this.emit(':ask', 'startGameHandlers', 'Try saying a number.');
+          },
+
+        'Unhandled': function() {
+            console.log("UNHANDLED");
+            var message = 'Repeat the name of the recipient.';
+            this.emit(':ask', message, message);
+        }
+    });
+
+
+
+
+    var guessModeHandlers = Alexa.CreateStateHandler(states.GUESSMODE, {
+      'NewSession': function() {
+
+        this.handler.state = '';
+        this.emitWithState('NewSession'); // Equivalent to the Start Mode NewSession handler
+      },
+      'HelloWorldIntent': function() {
+        this.emit(':ask', this.attributes['token'], this.attributes['mGUID']);
+      },
+      'Unhandled': function() {
+        //  this.handler.state = states.GUESSMODE;
+        this.emit(':ask', 'Sorry, I didn\'t get that. Try saying a number.', 'Try saying a number.');
+      },
+      'NotANum': function() {
+        this.emit(':ask', 'Sorry, I didn\'t get that. Try saying a number.', 'Try saying a number.');
+      }
+    });
