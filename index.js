@@ -99,6 +99,33 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
       'HelloWorldIntent': function() {
 
+
+
+        var cardTitle = 'Hello World Card';
+        var cardContent = '<font size="2"> small (28px) </font>This text will be displayed in the companion app card.';
+
+        var imageObj = {
+          smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
+          largeImageUrl: 'https://imgs.xkcd.com/comics/standards.png'
+        };
+
+        var permissionArray = ['read::alexa:device:all:address'];
+
+        var updatedIntent = this.event.request.intent;
+
+        var slotToElicit = "Slot to elicit";
+
+        var slotToConfirm = "Slot to confirm";
+
+        //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
+
+        this.emit(':tellWithCard', cardContent, cardTitle, cardContent);
+
+
+
+
+
+/*
         var promise = new Promise(function(resolve, reject) {
 
 
@@ -230,8 +257,8 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
         });
 
         promise.then(res => {
-          var cardTitle = 'Hello World<p> Card';
-          var cardContent = 'This text will be displayed in the companion app card.';
+          var cardTitle = 'Hello World Card';
+          var cardContent = '<font size="2"> small (28px) </font>This text will be displayed in the companion app card.';
 
           var imageObj = {
             smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
@@ -248,11 +275,15 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
           //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
 
-          this.emit(':tellWithCard', cardContent, cardTitle, res);
+          this.emit(':tellWithCard', cardContent, cardTitle, cardContent);
 
         }).catch(res => {
           //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
         });
+*/
+
+
+
       },
     // var promise = new Promise(function(resolve, reject) {
     //
