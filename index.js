@@ -1,598 +1,775 @@
 'use strict';
-const PSI_ROZA = {
-  LOGIN: "3554678395",
-  HOST: "http://194.186.207.23",
-  HOST_BLOCK: "http://194.186.207.23:9999",
-  SMS_PASS: "55098",
-  mGUID: "4856a406c200643f529efd6fe5e90fae",
-  token: "59821587bc4405b466f4fc6e731efa16",
-  PASS: "11223",
-  PFMtoken: "b02ddd9811f476eebfbce27ca8f404b1"
-};
-const GLOBALS = {
-  DEVID: "09D4B172-B264-419A-BFBE-6EA7E02B6239",
-  VERSION: "9",
-  SMS_PASS: "55098",
-  operation: "register",
-  login: "6435488876",
-  version: "9.10",
-  appType: "5.5.0",
-  deviceName: "Simulator",
-  devID: "08D4B172-B264-419A-BFBE-6EA7E00B6239",
-  mGUID: "27e5264de6bd37ba4fe37bea592099d4"
+const Alexa = require('alexa-sdk');
+
+//=========================================================================================================================================
+//TODO: The items below this comment need your attention
+//=========================================================================================================================================
+
+//Replace with your app ID (OPTIONAL).  You can find this value at the top of your skill's page on http://developer.amazon.com.
+//Make sure to enclose your value in quotes, like this:  var APP_ID = "amzn1.ask.skill.bb4045e6-b3e8-4133-b650-72923c5980f1";
+var APP_ID = undefined;
+
+//This function returns a descriptive sentence about your data.  Before a user starts a quiz, they can ask about a specific data element,
+//like "Ohio."  The skill will speak the sentence from this function, pulling the data values from the appropriate record in your data.
+function getSpeechDescription(item)
+{
+    var sentence = item.StateName + " is the " + item.StatehoodOrder + "th state, admitted to the Union in " + item.StatehoodYear + ".  The capital of " + item.StateName + " is " + item.Capital + ", and the abbreviation for " + item.StateName + " is <break strength='strong'/><say-as interpret-as='spell-out'>" + item.Abbreviation + "</say-as>.  I've added " + item.StateName + " to your Alexa app.  Which other state or capital would you like to know about?";
+    return sentence;
 }
 
-var Alexa = require("alexa-sdk");
-var parse = require('xml-parser');
-const axios = require('axios');
-
-const axiosCookieJarSupport = require('@3846masa/axios-cookiejar-support');
-const tough = require('tough-cookie');
-var Cookie = tough.Cookie;
-//
-axiosCookieJarSupport(axios);
-const cookieJar = new tough.CookieJar();
-
-var instance = axios.create({
-  timeout: 30000,
-  jar: cookieJar, // tough.CookieJar or boolean
-  withCredentials: true,
-  headers: {
-    'Accept-Language': 'ru;q=1',
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'User-Agent': 'Mobile Device'
-
-  }
-});
-
-
-var aut = function(addr) {
-  return instance.post(addr)
-};
-
-
-exports.handler = function(event, context, callback) {
-  var alexa = Alexa.handler(event, context);
-  alexa.registerHandlers(newSessionHandlers, guessModeHandlers, startGameHandlers);
-  alexa.execute();
-};
-
-// var handlers = {
-// 'LaunchRequest': function() {
-//   this.emit('SayHello');
-// },
-//
-// SayHello: function() {
-//   this.emit(':ask', 999, 222);
-// },
-//   travelintent: function() {
-//     this.emit(':ask', "from handlers", 222);
-//   }
-// };
-
-var states = {
-  GUESSMODE: '_GUESSMODE', // User is trying to guess the number.
-  STARTMODE: '_STARTMODE', // Prompt the user to start or restart the game.
-  ENDMODE: '_ENDMODE'
-};
-
-var newSessionHandlers = {
-  'NewSession': function() {
-    this.handler.state = states.STARTMODE;
-    this.emit(':ask', 'Welcome ');
-    //'Say yes to start the game or no to quit.
-  }
-};
-
-
-
-
-
-
-
-
-
-var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
-      'NewSession': function() {
-        this.emit('NewSession'); // Uses the handler in newSessionHandlers
-      },
-
-      'HelloWorldIntent': function() {
-
-
-
-        var cardTitle = 'Hello World Card';
-        var cardContent = '<font size="2"> small (28px) </font>This text will be displayed in the companion app card.';
-
-        var imageObj = {
-          smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
-          largeImageUrl: 'https://imgs.xkcd.com/comics/standards.png'
-        };
-
-        var permissionArray = ['read::alexa:device:all:address'];
-
-        var updatedIntent = this.event.request.intent;
-
-        var slotToElicit = "Slot to elicit";
-
-        var slotToConfirm = "Slot to confirm";
-
-        //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-
-        this.emit(':tellWithCard', cardContent, cardTitle, cardContent);
-
-
-
-
-
-/*
-        var promise = new Promise(function(resolve, reject) {
-
-
-
-
-          aut(PSI_ROZA.HOST +
-              '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-              '&version=' + GLOBALS.VERSION +
-              '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-              GLOBALS.DEVID).then(res => {
-              var obj = parse(res.data);
-              //console.log(obj);
-              //console.log(obj['root']['children'][0]['children'][0]['content']);
-              return obj['root']['children'][2]['children'][0]['content'];
-
-            }).then(mGUID => {
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-                mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone").then(() => {
-                return mGUID;
-              })
-
-            }).then(mGUID => {
-
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-                mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone" +
-                "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-                GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-                var obj = parse(res.data);
-                //console.log(res.data);
-                var v2 = obj['root']['children'][2]['children'][1]['content'];
-
-                return v2;
-              })
-
-            }).then(token => {
-
-              return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                "/postCSALogin.do?token=" + token).then(res => {})
-
-            }).then(() => {
-              return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                "/private/payments/list.do?from=08.11.2015&to=31.03.2018&paginationSize=20&paginationOffset=0"
-              ).then(res => {
-                return res
-              });
-
-
-            }).then((res) => {
-
-              var obj = parse(res.data);
-
-
-
-
-
-              var arr2 = [];
-              var myobj = {};
-              var k = function(obj) {
-
-                if (Array.isArray(obj)) {
-
-                  obj.forEach(function(item, i) {
-                    k(item);
-                  });
-                } else {
-                  if (obj.name == 'operation') {
-                    //console.log(obj.children[1]);
-                    arr2.push(obj.children)
-                  } else {
-                    k(obj.children)
-                  }
-                }
-              };
-
-
-              //console.log(obj.root);
-              k(obj.root);
-
-              //console.log(arr2[0][0]);
-
-
-              var arr3 = [];
-                   arr2.forEach(function(item, i) {
-                     var ob = {};
-                     item.forEach(function(item2, i2) {
-                       if (item2.name == 'type') {
-                         ob.type = item2.content
-                       }
-                       if (item2.name == 'form') {
-                         ob.form = item2.content
-                       }
-                       if (item2.name == 'date') {
-                         ob.date = item2.content
-                       }
-                       if (item2.name == 'operationAmount') {
-                         item2.children.forEach(function(item3, i3) {
-                           if (item3.name == 'amount') {
-                             ob.amount = item3.content;
-                           }
-                           if (item3.name == 'currency') {
-                             ob.code = item3.children[0].content;
-                           }
-                         });
-                       }
-                     });
-                     arr3.push(ob)
-                       //console.log(item[0]);
-                   });
-                   var str = "";
-
-                   arr3.forEach(function(item, i) {
-                     str += item.type + " :: " + item.form + " :: " + item.date +
-                       " :: " + item.amount + " :: " + item.code + "\n";
-                   });
-                   //console.log(str);
-
-              resolve(str);
-            })
-            .catch(res => {
-              reject(0);
-              // reject(0);
-              //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
-            });
-
-        });
-
-        promise.then(res => {
-          var cardTitle = 'Hello World Card';
-          var cardContent = '<font size="2"> small (28px) </font>This text will be displayed in the companion app card.';
-
-          var imageObj = {
-            smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
-            largeImageUrl: 'https://imgs.xkcd.com/comics/standards.png'
-          };
-
-          var permissionArray = ['read::alexa:device:all:address'];
-
-          var updatedIntent = this.event.request.intent;
-
-          var slotToElicit = "Slot to elicit";
-
-          var slotToConfirm = "Slot to confirm";
-
-          //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-
-          this.emit(':tellWithCard', cardContent, cardTitle, cardContent);
-
-        }).catch(res => {
-          //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
-        });
-*/
-
-
-
-      },
-    // var promise = new Promise(function(resolve, reject) {
-    //
-    //     aut(PSI_ROZA.HOST +
-    //         '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-    //         '&version=' + GLOBALS.VERSION +
-    //         '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-    //         GLOBALS.DEVID).then(res => {
-    //         var obj = parse(res.data);
-    //         //console.log(obj);
-    //         //console.log(obj['root']['children'][0]['children'][0]['content']);
-    //         return obj['root']['children'][2]['children'][0]['content'];
-    //
-    //       }).then(mGUID => {
-    //         //console.log(mGUID);
-    //         return aut(PSI_ROZA.HOST +
-    //           "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-    //           mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-    //           ".10&appType=iPhone").then(() => {
-    //           return mGUID;
-    //         })
-    //
-    //       }).then(mGUID => {
-    //         //console.log(mGUID);
-    //         this.attributes['mGUID'] = mGUID;
-    //         return aut(PSI_ROZA.HOST +
-    //           "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-    //           mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-    //           ".10&appType=iPhone" +
-    //           "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-    //           GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-    //           var obj = parse(res.data);
-    //           //console.log(res.data);
-    //           return obj['root']['children'][2]['children'][1]['content'];
-    //         })
-    //
-    //       }).then(token => {
-    //         console.log(token);
-    //         return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-    //           "/postCSALogin.do?token=" + token).then(res => {
-    //
-    //           resolve(1);
-    //
-    //         });
-    //       })
-    //       .catch(res => {
-    //         reject(0);
-    //         //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
-    //       });
-    //
-    //   }); // end Promise
-
-
-
-
-
-
-                // var obj = parse(res.data);
-                // //console.log(res.data);
-                // //return obj.root.name;
-                // //
-                // var arr2 = [];
-                // var myobj = {};
-                // var k = function(obj) {
-                //
-                //   if (Array.isArray(obj)) {
-                //
-                //     obj.forEach(function(item, i) {
-                //       k(item);
-                //     });
-                //   } else {
-                //     if (obj.name == 'operation') {
-                //       //console.log(obj.children[1]);
-                //       arr2.push(obj.children)
-                //     } else {
-                //       k(obj.children)
-                //     }
-                //   }
-                // };
-                //
-                //
-                // //console.log(obj.root);
-                // k(obj.root);
-                //
-                // //console.log(arr2[0][0]);
-                //
-                //
-                // var arr3 = [];
-                // arr2.forEach(function(item, i) {
-                //   var ob = {};
-                //   item.forEach(function(item2, i2) {
-                //     if (item2.name == 'type') {
-                //       ob.type = item2.content
-                //     }
-                //     if (item2.name == 'form') {
-                //       ob.form = item2.content
-                //     }
-                //     if (item2.name == 'date') {
-                //       ob.date = item2.content
-                //     }
-                //     if (item2.name == 'operationAmount') {
-                //       item2.children.forEach(function(item3, i3) {
-                //         if (item3.name == 'amount') {
-                //           ob.amount = item3.content;
-                //         }
-                //         if (item3.name == 'currency') {
-                //           ob.code = item3.children[0].content;
-                //         }
-                //       });
-                //     }
-                //   });
-                //   arr3.push(ob)
-                //   //console.log(item[0]);
-                // });
-                // var str = "str: ";
-                // arr3.forEach(function(item, i) {
-                //   str +=item.type + " :: " + item.form + " :: " + item.date +  " :: " + item.amount + " :: " + item.code + "\n"
-                // });
-
-
-
-
-
-      //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-
-
+//We have provided two ways to create your quiz questions.  The default way is to phrase all of your questions like: "What is X of Y?"
+//If this approach doesn't work for your data, take a look at the commented code in this function.  You can write a different question
+//structure for each property of your data.
+function getQuestion(counter, property, item)
+{
+    return "Here is your " + counter + "th question.  What is the " + formatCasing(property) + " of "  + item.StateName + "?";
 
     /*
-            aut(PSI_ROZA.HOST +
-                '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-                '&version=' + GLOBALS.VERSION +
-                '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-                GLOBALS.DEVID).then(res => {
-                var obj = parse(res.data);
-                //console.log(obj);
-                console.log(obj['root']['children'][0]['children'][0]['content']);
-                return obj['root']['children'][2]['children'][0]['content'];
-
-              }).then(mGUID => {
-                console.log(mGUID);
-                return aut(PSI_ROZA.HOST +
-                  "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-                  mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-                  ".10&appType=iPhone").then(() => {
-                  return mGUID;
-                })
-
-              }).then(mGUID => {
-                console.log(mGUID);
-                this.attributes['mGUID'] = mGUID;
-                return aut(PSI_ROZA.HOST +
-                  "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-                  mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-                  ".10&appType=iPhone" +
-                  "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-                  GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-                  var obj = parse(res.data);
-                  //console.log(res.data);
-                  return obj['root']['children'][2]['children'][1]['content'];
-                })
-
-              }).then(token => {
-                console.log(token);
-                 return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                  "/postCSALogin.do?token=" + token).then(res => {
-
-                    var p = new Promise(function(resolve,reject){
-                      var obj = parse(res.data);
-                      //console.log(res.data);
-                      //return obj.root.name;
-                      //
-                      var arr2 = [];
-                      var myobj = {};
-                      var k = function(obj) {
-
-                        if (Array.isArray(obj)) {
-
-                          obj.forEach(function(item, i) {
-                            k(item);
-                          });
-                        } else {
-                          if (obj.name == 'operation') {
-                            //console.log(obj.children[1]);
-                            arr2.push(obj.children)
-                          } else {
-                            k(obj.children)
-                          }
-                        }
-                      };
-
-
-                      //console.log(obj.root);
-                      k(obj.root);
-
-                      //console.log(arr2[0][0]);
-
-
-                      var arr3 = [];
-                      arr2.forEach(function(item, i) {
-                        var ob = {};
-                        item.forEach(function(item2, i2) {
-                          if (item2.name == 'type') {
-                            ob.type = item2.content
-                          }
-                          if (item2.name == 'form') {
-                            ob.form = item2.content
-                          }
-                          if (item2.name == 'date') {
-                            ob.date = item2.content
-                          }
-                          if (item2.name == 'operationAmount') {
-                            item2.children.forEach(function(item3, i3) {
-                              if (item3.name == 'amount') {
-                                ob.amount = item3.content;
-                              }
-                              if (item3.name == 'currency') {
-                                ob.code = item3.children[0].content;
-                              }
-                            });
-                          }
-                        });
-                        arr3.push(ob)
-                        //console.log(item[0]);
-                      });
-                      var str = "str: ";
-                      arr3.forEach(function(item, i) {
-                        str +=item.type + " :: " + item.form + " :: " + item.date +  " :: " + item.amount + " :: " + item.code + "\n"
-                      });
-                      resolve(1);
-                    });
-                  return p.then(res=>{
-                    return res;
-                  }).cath(res=>{
-                    return "error";
-                  })
+    switch(property)
+    {
+        case "City":
+            return "Here is your " + counter + "th question.  In what city do the " + item.League + "'s "  + item.Mascot + " play?";
+        break;
+        case "Sport":
+            return "Here is your " + counter + "th question.  What sport do the " + item.City + " " + item.Mascot + " play?";
+        break;
+        case "HeadCoach":
+            return "Here is your " + counter + "th question.  Who is the head coach of the " + item.City + " " + item.Mascot + "?";
+        break;
+        default:
+            return "Here is your " + counter + "th question.  What is the " + formatCasing(property) + " of the "  + item.Mascot + "?";
+        break;
+    }
     */
+}
+
+//This is the function that returns an answer to your user during the quiz.  Much like the "getQuestion" function above, you can use a
+//switch() statement to create different responses for each property in your data.  For example, when this quiz has an answer that includes
+//a state abbreviation, we add some SSML to make sure that Alexa spells that abbreviation out (instead of trying to pronounce it.)
+function getAnswer(property, item)
+{
+    switch(property)
+    {
+        case "Abbreviation":
+            return "The " + formatCasing(property) + " of " + item.StateName + " is <say-as interpret-as='spell-out'>" + item[property] + "</say-as>. ";
+        break;
+        default:
+            return "The " + formatCasing(property) + " of " + item.StateName + " is " + item[property] + ". ";
+        break;
+    }
+}
+
+//This is a list of positive speechcons that this skill will use when a user gets a correct answer.  For a full list of supported
+//speechcons, go here: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/speechcon-reference
+var speechConsCorrect = ["Yay"];
+
+//This is a list of negative speechcons that this skill will use when a user gets an incorrect answer.  For a full list of supported
+//speechcons, go here: https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/speechcon-reference
+var speechConsWrong = [ "Bummer"];
+
+//This is the welcome message for when a user starts the skill without a specific intent.
+var WELCOME_MESSAGE = "Welcome to the United States Quiz Game!  You can ask me about any of the fifty states and their capitals, or you can ask me to start a quiz.  What would you like to do?";
+
+//This is the message a user will hear when they start a quiz.
+var START_QUIZ_MESSAGE = "OK.  I will ask you 10 questions about the United States.";
+
+//This is the message a user will hear when they try to cancel or stop the skill, or when they finish a quiz.
+var EXIT_SKILL_MESSAGE = "Thank you for playing the United States Quiz Game!  Let's play again soon!";
+
+//This is the message a user will hear after they ask (and hear) about a specific data element.
+var REPROMPT_SPEECH = "Which other state or capital would you like to know about?";
+
+//This is the message a user will hear when they ask Alexa for help in your skill.
+var HELP_MESSAGE = "I know lots of things about the United States.  You can ask me about a state or a capital, and I'll tell you what I know.  You can also test your knowledge by asking me to start a quiz.  What would you like to do?";
 
 
-    //this.emit(':ask', token, token);
+//This is the response a user will receive when they ask about something we weren't expecting.  For example, say "pizza" to your
+//skill when it starts.  This is the response you will receive.
+function getBadAnswer(item) { return "I'm sorry. " + item + " is not something I know very much about in this skill. " + HELP_MESSAGE; }
+
+//This is the message a user will receive after each question of a quiz.  It reminds them of their current score.
+function getCurrentScore(score, counter) { return "Your current score is " + score + " out of " + counter + ". "; }
+
+//This is the message a user will receive after they complete a quiz.  It tells them their final score.
+function getFinalScore(score, counter) { return "Your final score is " + score + " out of " + counter + ". "; }
+
+//These next four values are for the Alexa cards that are created when a user asks about one of the data elements.
+//This only happens outside of a quiz.
+
+//If you don't want to use cards in your skill, set the USE_IMAGES_FLAG to false.  If you set it to true, you will need an image for each
+//item in your data.
+var USE_IMAGES_FLAG = true;
+
+//This is what your card title will be.  For our example, we use the name of the state the user requested.
+function getCardTitle(item) { return item.StateName;}
+
+//This is the small version of the card image.  We use our data as the naming convention for our images so that we can dynamically
+//generate the URL to the image.  The small image should be 720x400 in dimension.
+function getSmallImage(item) { return "https://m.media-amazon.com/images/G/01/mobile-apps/dex/alexa/alexa-skills-kit/tutorials/quiz-game/state_flag/720x400/" + item.Abbreviation + "._TTH_.png"; }
+
+//This is the large version of the card image.  It should be 1200x800 pixels in dimension.
+function getLargeImage(item) { return "https://m.media-amazon.com/images/G/01/mobile-apps/dex/alexa/alexa-skills-kit/tutorials/quiz-game/state_flag/1200x800/" + item.Abbreviation + "._TTH_.png"; }
+
+// backgroundImage for Echo Show body templates
+function getBackgroundImage(item) { return "https://m.media-amazon.com/images/G/01/mobile-apps/dex/alexa/alexa-skills-kit/tutorials/quiz-game/state_flag/1024x600/" + item.Abbreviation + "._TTH_.png"; }
+
+//=========================================================================================================================================
+//TODO: Replace this data with your own.
+//=========================================================================================================================================
+var data = [
+                {StateName: "Alabama",        Abbreviation: "AL", Capital: "Montgomery",     StatehoodYear: 1819, StatehoodOrder: 22 },
+                {StateName: "Alaska",         Abbreviation: "AK", Capital: "Juneau",         StatehoodYear: 1959, StatehoodOrder: 49 },
+                {StateName: "Arizona",        Abbreviation: "AZ", Capital: "Phoenix",        StatehoodYear: 1912, StatehoodOrder: 48 },
+                {StateName: "Arkansas",       Abbreviation: "AR", Capital: "Little Rock",    StatehoodYear: 1836, StatehoodOrder: 25 },
+                {StateName: "California",     Abbreviation: "CA", Capital: "Sacramento",     StatehoodYear: 1850, StatehoodOrder: 31 },
+                {StateName: "Colorado",       Abbreviation: "CO", Capital: "Denver",         StatehoodYear: 1876, StatehoodOrder: 38 },
+                {StateName: "Connecticut",    Abbreviation: "CT", Capital: "Hartford",       StatehoodYear: 1788, StatehoodOrder: 5 },
+                {StateName: "Delaware",       Abbreviation: "DE", Capital: "Dover",          StatehoodYear: 1787, StatehoodOrder: 1 },
+                {StateName: "Florida",        Abbreviation: "FL", Capital: "Tallahassee",    StatehoodYear: 1845, StatehoodOrder: 27 },
+                {StateName: "Georgia",        Abbreviation: "GA", Capital: "Atlanta",        StatehoodYear: 1788, StatehoodOrder: 4 }
+
+            ];
+
+//=========================================================================================================================================
+//Editing anything below this line might break your skill.
+//=========================================================================================================================================
+
+var counter = 0;
+
+var states = {
+    START: "_START",
+    QUIZ: "_QUIZ"
+};
+
+const handlers = {
+     "LaunchRequest": function() {
+        this.handler.state = states.START;
+        this.emitWithState("Start");
+     },
+    "QuizIntent": function() {
+        this.handler.state = states.QUIZ;
+        this.emitWithState("Quiz");
+    },
+    "AnswerIntent": function() {
+        this.handler.state = states.START;
+        this.emitWithState("AnswerIntent");
+    },
+    "AMAZON.HelpIntent": function() {
+        this.emit(":ask", HELP_MESSAGE, HELP_MESSAGE);
+    },
+    "Unhandled": function() {
+        this.handler.state = states.START;
+        this.emitWithState("Start");
+    },
+    "AMAZON.PreviousIntent": function() {
+        this.handler.state = states.START;
+        this.emitWithState("Start");
+    },
+    "AMAZON.NextIntent": function() {
+        this.handler.state = states.START;
+        this.emitWithState("Start");
+    }
+};
+
+var startHandlers = Alexa.CreateStateHandler(states.START,{
+    "Start": function() {
+        this.emit(":ask", WELCOME_MESSAGE, HELP_MESSAGE);
+    },
+    "AnswerIntent": function() {
+       console.log("Answer Intent event: "+JSON.stringify(this.event));
+        var item = getItem(this.event.request.intent.slots);
+
+        if (item[Object.getOwnPropertyNames(data[0])[0]] !== undefined) {
+            if (supportsDisplay.call(this)||isSimulator.call(this)) {
+              //this device supports a display
+
+              let content = {
+                    "hasDisplaySpeechOutput" : getSpeechDescription(item),
+                    "hasDisplayRepromptText" : REPROMPT_SPEECH,
+                    "noDisplaySpeechOutput" : getSpeechDescription(item),
+                    "noDisplayRepromptText" : REPROMPT_SPEECH,
+                    "simpleCardTitle" : getCardTitle(item),
+                    "simpleCardContent" : getTextDescription(item),
+                    "bodyTemplateTitle" : getCardTitle(item),
+                    "bodyTemplateContent" : getTextDescription(item),
+                    "templateToken" : "ItemDetailsView",
+                    "askOrTell": ":ask",
+                    "sessionAttributes" : this.attributes
+                };
+                if (USE_IMAGES_FLAG) {
+                  content["imageSmallUrl"]=getSmallImage(item);
+                  content["imageLargeUrl"]=getLargeImage(item);
+                }
+                renderTemplate.call(this,content);
 
 
-    //   }).then(res=>{
-    //
-    //                   //return obj['root']['children'][2]['children'][1]['content'];
-    //                   //var v = obj['root']['children'][2]['children'][3]['content'];
-    //                   //this.attributes['token'] = token;
-    //                   //this.handler.state = states.GUESSMODE;
-    //                   var cardTitle = 'Hello World Card';
-    //                   var cardContent = 'This text will be displayed in the companion app card.';
-    //
-    //                   var imageObj = {
-    //                     smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
-    //                     largeImageUrl: 'https://imgs.xkcd.com/comics/standards.png'
-    //                   };
-    //
-    //                   var permissionArray = ['read::alexa:device:all:address'];
-    //
-    //                   var updatedIntent = this.event.request.intent;
-    //
-    //                   var slotToElicit = "Slot to elicit";
-    //
-    //                   var slotToConfirm = "Slot to confirm";
-    //
-    //                   //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-    //
-    //                   this.emit(':tellWithCard', "success", cardTitle, res+cardContent, imageObj);
-    //   });
-    // })
-    //
-    // .catch(function(error) {
-    //   console.log(error)
-    // });
 
+            } else {
+              //this device does not support a display
+              if (USE_IMAGES_FLAG) {
+                //we have images so produce a card
+                var imageObj = {smallImageUrl: getSmallImage(item), largeImageUrl: getLargeImage(item)};
+                this.emit(":askWithCard", getSpeechDescription(item), REPROMPT_SPEECH, getCardTitle(item), getTextDescription(item), imageObj);
 
+              } else {
+                //no images so voice only
+                this.emit(":ask", getSpeechDescription(item), REPROMPT_SPEECH);
+              }
+            }
 
-
-  travelintent: function() {
-    var self = this;
-    this.handler.state = states.GUESSMODE;
-    //this.attributes['name'] = this.event.request.intent.slots.MySlot.value;
-    //this.emit(':ask', 'Myitem', 'Try saying a number.');
-    //var e = this.event.request.intent.slots.About.value.toLowerCase();
-    this.emit(':ask', 'startGameHandlers', 'Try saying a number.');
-  },
-
-  'Unhandled': function() {
-    console.log("UNHANDLED");
-    var message = 'Repeat the name of the recipient.';
-    this.emit(':ask', message, message);
-  }
+        } else {
+            this.emit(":ask", getBadAnswer(item), getBadAnswer(item));
+        }
+    },
+    "QuizIntent": function() {
+        this.handler.state = states.QUIZ;
+        this.attributes['STATE'] = this.handler.state;
+        console.log("IN QUIZ INTENT " + this.handler.state);
+        console.log("IN QUIZ INTENT " + JSON.stringify(this.attributes));
+        this.emitWithState("Quiz");
+    },
+    "AMAZON.StopIntent": function() {
+        this.emit(":tell", EXIT_SKILL_MESSAGE);
+    },
+    "AMAZON.CancelIntent": function() {
+        this.emit(":tell", EXIT_SKILL_MESSAGE);
+    },
+    "AMAZON.HelpIntent": function() {
+        this.emit(":ask", HELP_MESSAGE, HELP_MESSAGE);
+    },
+    "Unhandled": function() {
+        this.emit(":ask", HELP_MESSAGE, HELP_MESSAGE);
+    },
+    "AMAZON.PreviousIntent": function() {
+        this.emit(":ask", HELP_MESSAGE, HELP_MESSAGE);
+    },
+    "AMAZON.NextIntent": function() {
+        this.emit(":ask", HELP_MESSAGE, HELP_MESSAGE);
+    }
 });
 
 
+var quizHandlers = Alexa.CreateStateHandler(states.QUIZ,{
+    "Quiz": function() {
+        this.attributes["response"] = "";
+        this.attributes["counter"] = 0;
+        this.attributes["quizscore"] = 0;
+        this.emitWithState("AskQuestion");
+    },
+    "AskQuestion": function() {
+        console.log("in askQuestion: "+JSON.stringify(this.attributes));
+        if (this.attributes["counter"] == 0)
+        {
+            this.attributes["response"] = START_QUIZ_MESSAGE + " ";
+        }
+
+        var random = getRandom(0, data.length-1);
+        var item = data[random];
+
+        var propertyArray = Object.getOwnPropertyNames(item);
+        var property = propertyArray[getRandom(1, propertyArray.length-1)];
+
+        // store correct answers in session attributes
+        this.attributes["quizitem"] = item;
+        this.attributes["quizproperty"] = property;
+        this.attributes["counter"]++;
+
+        // Create list of possible answers to display on Echo Show (3 wrong, 1 right).
+
+        var answerList = [];
+        answerList.push(item[property]);
+        for (var i = 0; i < 2; i++) {
+          var randomItem = data[getRandom(0, data.length-1)];
+          answerList.push(randomItem[property]);
+          //TODO could push same the same item more than once
+        }
+        //console.log("answerList: "+JSON.stringify(answerList));
+
+        var question = getQuestion(this.attributes["counter"], property, item);
+        var speech = this.attributes["response"] + question;
 
 
-var guessModeHandlers = Alexa.CreateStateHandler(states.GUESSMODE, {
-  'NewSession': function() {
+        if (USE_IMAGES_FLAG) {
 
-    this.handler.state = '';
-    this.emitWithState('NewSession'); // Equivalent to the Start Mode NewSession handler
-  },
-  'HelloWorldIntent': function() {
-    this.emit(':ask', this.attributes['token'], this.attributes['mGUID']);
-  },
-  'Unhandled': function() {
-    //  this.handler.state = states.GUESSMODE;
-    this.emit(':ask', 'Sorry, I didn\'t get that. Try saying a number.', 'Try saying a number.');
-  },
-  'NotANum': function() {
-    this.emit(':ask', 'Sorry, I didn\'t get that. Try saying a number.', 'Try saying a number.');
-  }
+        //TODO if (this.event.context.System.device.supportedInterfaces.Display) {
+              var shuffledMultipleChoiceList = shuffle(answerList);
+
+              let listItems = shuffledMultipleChoiceList.map((x) => {
+                return { "token" : x,
+                  "textContent" : {
+                    "primaryText":
+                    {
+                      "text": x,
+                      "type": "PlainText"
+                    }
+                  }
+                }
+              })
+
+
+
+              let content = {
+                    "hasDisplaySpeechOutput" : speech,
+                    "hasDisplayRepromptText" : question,
+                    "noDisplaySpeechOutput" : speech,
+                    "noDisplayRepromptText" : question,
+                    "simpleCardTitle" : getCardTitle(item),
+                    "simpleCardContent" : getTextDescription(item),
+                    "listTemplateTitle" : this.attributes["quizscore"]+" / "+this.attributes["counter"]+": "+getCardTitle(item),
+                    //"listTemplateContent" : getTextDescription(item),
+                    "templateToken" : "MultipleChoiceListView",
+                    "askOrTell": ":ask",
+                    "listItems" : listItems,
+                    "hint" : "Add a hint here",
+                    "sessionAttributes" : this.attributes
+                };
+
+                if (USE_IMAGES_FLAG) {
+                  content["backgroundImageLargeUrl"]=getBackgroundImage(item);
+                }
+                console.log("ASK Question event: "+JSON.stringify(this.event));
+
+                renderTemplate.call(this,content);
+
+
+
+        } else {
+            this.emit(":ask", speech, question);
+        }
+
+    },
+    "ElementSelected" : function() {
+      // We will look for the value in this.event.request.token in the AnswerIntent call to compareSlots
+      console.log("in ElementSelected QUIZ state");
+      this.emit(":tell", "11111111111111");
+      this.emitWithState("AnswerIntent");
+    },
+    "AnswerIntent": function() {
+        var response = "";
+        var item = this.attributes["quizitem"];
+        var property = this.attributes["quizproperty"];
+
+        var correct = compareSlots.call(this, item[property]);
+
+        if (correct)
+        {
+            response = getSpeechCon(true);
+            this.attributes["quizscore"]++;
+        }
+        else
+        {
+            response = getSpeechCon(false);
+        }
+
+        response += getAnswer(property, item);
+
+        if (this.attributes["counter"] < 10)
+        {
+            response += getCurrentScore(this.attributes["quizscore"], this.attributes["counter"]);
+            this.attributes["response"] = response;
+            this.emitWithState("AskQuestion");
+        }
+        else
+        {
+          response += getFinalScore(this.attributes["quizscore"], this.attributes["counter"]);
+          if (supportsDisplay.call(this)||isSimulator.call(this)) {
+            //this device supports a display
+
+            let content = {
+                  "hasDisplaySpeechOutput" : response + " " + EXIT_SKILL_MESSAGE,
+                  "bodyTemplateContent" : getFinalScore(this.attributes["quizscore"], this.attributes["counter"]),
+                  "templateToken" : "FinalScoreView",
+                  "askOrTell": ":tell",
+                  "sessionAttributes" : this.attributes
+              };
+              if (USE_IMAGES_FLAG) {
+                content["backgroundImageUrl"]=getBackgroundImage(item);
+              }
+              renderTemplate.call(this,content);
+
+
+
+          } else {
+
+            this.emit(":tell", response + " " + EXIT_SKILL_MESSAGE);
+          }
+        }
+    },
+    "AMAZON.StartOverIntent": function() {
+        this.emitWithState("Quiz");
+    },
+    "AMAZON.StopIntent": function() {
+        this.emit(":tell", EXIT_SKILL_MESSAGE);
+    },
+    "AMAZON.CancelIntent": function() {
+        this.emit(":tell", EXIT_SKILL_MESSAGE);
+    },
+    "AMAZON.HelpIntent": function() {
+        this.emit(":ask", HELP_MESSAGE, HELP_MESSAGE);
+    },
+    "Unhandled": function() {
+        this.emitWithState("AnswerIntent");
+    },
+    "AMAZON.PreviousIntent": function() {
+          this.emitWithState("AnswerIntent");
+    },
+    "AMAZON.NextIntent": function() {
+          this.emitWithState("AnswerIntent");
+    }
 });
+
+function compareSlots(value) {
+  //are there slots
+  var isSlot=
+    this.event.request &&
+    this.event.request.intent &&
+    this.event.request.intent.slots;
+
+  //are there tokens
+  var isToken=
+    this.event.request &&
+    this.event.request.token;
+
+  if(isSlot){
+  let slots=this.event.request.intent.slots;
+    for (var slot in slots){
+        if (slots[slot].value != undefined){
+            if (slots[slot].value.toString().toLowerCase() == value.toString().toLowerCase()) return true;
+        }
+    }
+  }
+  if(isToken){
+    if (this.event.request.token.toString().toLowerCase() == value.toString().toLowerCase()) return true;
+    console.log(this.event.request.token.toString().toLowerCase());
+  }
+    return false;
+}
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
+function getRandom(min, max)
+{
+    return Math.floor(Math.random() * (max-min+1)+min);
+}
+
+function getRandomSymbolSpeech(symbol)
+{
+    return "<say-as interpret-as='spell-out'>" + symbol + "</say-as>";
+}
+
+function getItem(slots)
+{
+    var propertyArray = Object.getOwnPropertyNames(data[0]);
+    var value;
+
+    for (var slot in slots)
+    {
+        if (slots[slot].value !== undefined)
+        {
+            value = slots[slot].value;
+            for (var property in propertyArray)
+            {
+                var item = data.filter(x => x[propertyArray[property]].toString().toLowerCase() === slots[slot].value.toString().toLowerCase());
+                if (item.length > 0)
+                {
+                    return item[0];
+                }
+            }
+        }
+    }
+    return value;
+}
+
+function getSpeechCon(type)
+{
+    var speechCon = "";
+    if (type) return "<say-as interpret-as='interjection'>" + speechConsCorrect[getRandom(0, speechConsCorrect.length-1)] + "! </say-as><break strength='strong'/>";
+    else return "<say-as interpret-as='interjection'>" + speechConsWrong[getRandom(0, speechConsWrong.length-1)] + " </say-as><break strength='strong'/>";
+}
+
+function formatCasing(key)
+{
+    key = key.split(/(?=[A-Z])/).join(" ");
+    return key;
+}
+
+function getTextDescription(item)
+{
+    var text = "";
+
+    for (var key in item)
+    {
+        text += formatCasing(key) + ": " + item[key] + "\n";
+    }
+    return text;
+}
+
+exports.handler = (event, context) => {
+    const alexa = Alexa.handler(event, context);
+    alexa.appId = APP_ID;
+    alexa.registerHandlers(handlers, startHandlers, quizHandlers);
+    alexa.execute();
+};
+
+//==============================================================================
+//===================== Echo Show Helper Functions  ============================
+//==============================================================================
+
+
+function supportsDisplay() {
+  var hasDisplay =
+    this.event.context &&
+    this.event.context.System &&
+    this.event.context.System.device &&
+    this.event.context.System.device.supportedInterfaces &&
+    this.event.context.System.device.supportedInterfaces.Display
+
+  return hasDisplay;
+}
+
+function isSimulator() {
+  var isSimulator = !this.event.context; //simulator doesn't send context
+  return false;
+}
+
+
+function renderTemplate (content) {
+   console.log("renderTemplate" + content.templateToken);
+   //learn about the various templates
+   //https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/display-interface-reference#display-template-reference
+   //
+   switch(content.templateToken) {
+       case "WelcomeScreenView":
+         //Send the response to Alexa
+         this.context.succeed(response);
+         break;
+       case "FinalScoreView":
+        //  "hasDisplaySpeechOutput" : response + " " + EXIT_SKILL_MESSAGE,
+        //  "bodyTemplateContent" : getFinalScore(this.attributes["quizscore"], this.attributes["counter"]),
+        //  "templateToken" : "FinalScoreView",
+        //  "askOrTell": ":tell",
+        //  "hint":"start a quiz",
+        //  "sessionAttributes" : this.attributes
+        //  "backgroundImageUrl"
+        var response = {
+          "version": "1.0",
+          "response": {
+            "directives": [
+              {
+                "type": "Display.RenderTemplate",
+                "backButton": "HIDDEN",
+                "template": {
+                  "type": "BodyTemplate6",
+                  //"title": content.bodyTemplateTitle,
+                  "token": content.templateToken,
+                  "textContent": {
+                    "primaryText": {
+                      "type": "RichText",
+                      "text": "<font size = '7'>"+content.bodyTemplateContent+"</font>"
+                    }
+                  }
+                }
+              },{
+                  "type": "Hint",
+                  "hint": {
+                    "type": "PlainText",
+                    "text": content.hint
+                  }
+                }
+            ],
+            "outputSpeech": {
+              "type": "SSML",
+              "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+            },
+            "reprompt": {
+              "outputSpeech": {
+                "type": "SSML",
+                "ssml": ""
+              }
+            },
+            "shouldEndSession": content.askOrTell== ":tell",
+
+          },
+          "sessionAttributes": content.sessionAttributes
+
+        }
+
+        if(content.backgroundImageUrl) {
+          //when we have images, create a sources object
+
+          let sources = [
+            {
+              "size": "SMALL",
+              "url": content.backgroundImageUrl
+            },
+            {
+              "size": "LARGE",
+              "url": content.backgroundImageUrl
+            }
+          ];
+          //add the image sources object to the response
+          response["response"]["directives"][0]["template"]["backgroundImage"]={};
+          response["response"]["directives"][0]["template"]["backgroundImage"]["sources"]=sources;
+        }
+
+
+
+         //Send the response to Alexa
+         this.context.succeed(response);
+         break;
+
+       case "ItemDetailsView":
+           var response = {
+             "version": "1.0",
+             "response": {
+               "directives": [
+                 {
+                   "type": "Display.RenderTemplate",
+                   "template": {
+                     "type": "BodyTemplate3",
+                     "title": content.bodyTemplateTitle,
+                     "token": content.templateToken,
+                     "textContent": {
+                       "primaryText": {
+                         "type": "RichText",
+                         "text": "<font size = '5'>"+content.bodyTemplateContent+"</font>"
+                       }
+                     },
+                     "backButton": "HIDDEN"
+                   }
+                 }
+               ],
+               "outputSpeech": {
+                 "type": "SSML",
+                 "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+               },
+               "reprompt": {
+                 "outputSpeech": {
+                   "type": "SSML",
+                   "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+                 }
+               },
+               "shouldEndSession": content.askOrTell== ":tell",
+               "card": {
+                 "type": "Simple",
+                 "title": content.simpleCardTitle,
+                 "content": content.simpleCardContent
+               }
+             },
+             "sessionAttributes": content.sessionAttributes
+
+         }
+
+          if(content.imageSmallUrl && content.imageLargeUrl) {
+            //when we have images, create a sources object
+            //TODO switch template to one without picture?
+            let sources = [
+              {
+                "size": "SMALL",
+                "url": content.imageSmallUrl
+              },
+              {
+                "size": "LARGE",
+                "url": content.imageLargeUrl
+              }
+            ];
+            //add the image sources object to the response
+            response["response"]["directives"][0]["template"]["image"]={};
+            response["response"]["directives"][0]["template"]["image"]["sources"]=sources;
+          }
+          //Send the response to Alexa
+          console.log("ready to respond (ItemDetailsView): "+JSON.stringify(response));
+           this.context.succeed(response);
+           break;
+       case "MultipleChoiceListView":
+       console.log ("listItems "+JSON.stringify(content.listItems));
+           var response = {
+              "version": "1.0",
+              "response": {
+                "directives": [
+                  {
+                    "type": "Display.RenderTemplate",
+                    "template": {
+                      "type": "ListTemplate1",
+                      "title": content.listTemplateTitle,
+                      "token": content.templateToken,
+                      "listItems":content.listItems,
+                      "backgroundImage": {
+                        "sources": [
+                          {
+                            "size": "SMALL",
+                            "url": content.backgroundImageSmallUrl
+                          },
+                          {
+                            "size": "LARGE",
+                            "url": content.backgroundImageLargeUrl
+                          }
+                        ]
+                      },
+                      "backButton": "HIDDEN"
+                    }
+                  }
+                ],
+                "outputSpeech": {
+                  "type": "SSML",
+                  "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+                },
+                "reprompt": {
+                  "outputSpeech": {
+                    "type": "SSML",
+                    "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+                  }
+                },
+                "shouldEndSession": content.askOrTell== ":tell",
+                "card": {
+                  "type": "Simple",
+                  "title": content.simpleCardTitle,
+                  "content": content.simpleCardContent
+                }
+              },
+                "sessionAttributes": content.sessionAttributes
+
+          }
+
+            if(content.backgroundImageLargeUrl) {
+              //when we have images, create a sources object
+              //TODO switch template to one without picture?
+              let sources = [
+                {
+                  "size": "SMALL",
+                  "url": content.backgroundImageLargeUrl
+                },
+                {
+                  "size": "LARGE",
+                  "url": content.backgroundImageLargeUrl
+                }
+              ];
+              //add the image sources object to the response
+              response["response"]["directives"][0]["template"]["backgroundImage"]={};
+              response["response"]["directives"][0]["template"]["backgroundImage"]["sources"]=sources;
+            }
+            console.log("ready to respond (MultipleChoiceList): "+JSON.stringify(response));
+          this.context.succeed(response);
+           break;
+       default:
+           this.emit(':tell', "Thanks for playing, goodbye");
+   }
+
+}

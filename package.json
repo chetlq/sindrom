@@ -1,14 +1,11 @@
 {
-  "name": "src_worked",
+  "name": "sindrom",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "alexa-sdk": "^1.0.10",
-    "axios": "^0.16.0",
-    "cookies": "^0.7.0",
-    "@3846masa/axios-cookiejar-support": "^0.0.4",
-"xml-parser":"1.2.1"
+    "alexa-sdk": "^1.0.11",
+        "voice-insights-sdk": "^1.2.2"
 
   },
   "scripts": {
