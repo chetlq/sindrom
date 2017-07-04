@@ -1,598 +1,215 @@
+/* eslint-disable  func-names */
+/* eslint quote-props: ["error", "consistent"]*/
+/**
+ * This sample demonstrates a simple skill built with the Amazon Alexa Skills
+ * nodejs skill development kit.
+ * This sample supports multiple lauguages. (en-US, en-GB, de-DE).
+ * The Intent Schema, Custom Slots and Sample Utterances for this skill, as well
+ * as testing instructions are located at https://github.com/alexa/skill-sample-nodejs-fact
+ **/
+
 'use strict';
-const PSI_ROZA = {
-  LOGIN: "3554678395",
-  HOST: "http://194.186.207.23",
-  HOST_BLOCK: "http://194.186.207.23:9999",
-  SMS_PASS: "55098",
-  mGUID: "4856a406c200643f529efd6fe5e90fae",
-  token: "59821587bc4405b466f4fc6e731efa16",
-  PASS: "11223",
-  PFMtoken: "b02ddd9811f476eebfbce27ca8f404b1"
+
+const Alexa = require('alexa-sdk');
+
+const APP_ID = undefined;  // TODO replace with your app ID (OPTIONAL).
+
+const languageStrings = {
+    'en': {
+        translation: {
+            FACTS: [
+                'A year on Mercury is just 88 days long.',
+                'Despite being farther from the Sun, Venus experiences higher temperatures than Mercury.',
+                'Venus rotates anti-clockwise, possibly because of a collision in the past with an asteroid.',
+                'On Mars, the Sun appears about half the size as it does on Earth.',
+                'Earth is the only planet not named after a god.',
+                'Jupiter has the shortest day of all the planets.',
+                'The Milky Way galaxy will collide with the Andromeda Galaxy in about 5 billion years.',
+                'The Sun contains 99.86% of the mass in the Solar System.',
+                'The Sun is an almost perfect sphere.',
+                'A total solar eclipse can happen once every 1 to 2 years. This makes them a rare event.',
+                'Saturn radiates two and a half times more energy into space than it receives from the sun.',
+                'The temperature inside the Sun can reach 15 million degrees Celsius.',
+                'The Moon is moving approximately 3.8 cm away from our planet every year.',
+            ],
+            SKILL_NAME: 'Space Facts',
+            GET_FACT_MESSAGE: "Here's your fact: ",
+            HELP_MESSAGE: 'You can say tell me a space fact, or, you can say exit... What can I help you with?',
+            HELP_REPROMPT: 'What can I help you with?',
+            STOP_MESSAGE: 'Goodbye!',
+        },
+    },
+    'en-US': {
+        translation: {
+            FACTS: [
+                'A year on Mercury is just 88 days long.',
+                'Despite being farther from the Sun, Venus experiences higher temperatures than Mercury.',
+                'Venus rotates counter-clockwise, possibly because of a collision in the past with an asteroid.',
+                'On Mars, the Sun appears about half the size as it does on Earth.',
+                'Earth is the only planet not named after a god.',
+                'Jupiter has the shortest day of all the planets.',
+                'The Milky Way galaxy will collide with the Andromeda Galaxy in about 5 billion years.',
+                'The Sun contains 99.86% of the mass in the Solar System.',
+                'The Sun is an almost perfect sphere.',
+                'A total solar eclipse can happen once every 1 to 2 years. This makes them a rare event.',
+                'Saturn radiates two and a half times more energy into space than it receives from the sun.',
+                'The temperature inside the Sun can reach 15 million degrees Celsius.',
+                'The Moon is moving approximately 3.8 cm away from our planet every year.',
+            ],
+            SKILL_NAME: 'American Space Facts',
+        },
+    }
 };
-const GLOBALS = {
-  DEVID: "09D4B172-B264-419A-BFBE-6EA7E02B6239",
-  VERSION: "9",
-  SMS_PASS: "55098",
-  operation: "register",
-  login: "6435488876",
-  version: "9.10",
-  appType: "5.5.0",
-  deviceName: "Simulator",
-  devID: "08D4B172-B264-419A-BFBE-6EA7E00B6239",
-  mGUID: "27e5264de6bd37ba4fe37bea592099d4"
+
+const handlers = {
+    'LaunchRequest': function () {
+        this.emit('GetFact');
+    },
+    'GetNewFactIntent': function () {
+        this.emit('GetFact');
+    },
+    'GetFact': function () {
+        // Get a random space fact from the space facts list
+        // Use this.t() to get corresponding language data
+        const factArr = this.t('FACTS');
+        const factIndex = Math.floor(Math.random() * factArr.length);
+        const randomFact = factArr[factIndex];
+
+        // Create speech output
+        var speechOutput = this.t('GET_FACT_MESSAGE') + randomFact;
+
+        //check to see if the device we're working with supports display directives
+        //enable the simulator if you're testing
+      //  if(supportsDisplay.call(this)||isSimulator.call(this)) {
+          console.log("has display:"+ supportsDisplay.call(this));
+          console.log("is simulator:"+isSimulator.call(this));
+          var content = {
+             "hasDisplaySpeechOutput" : speechOutput,
+             "hasDisplayRepromptText" : randomFact,
+             "simpleCardTitle" : this.t('SKILL_NAME'),
+             "simpleCardContent" : randomFact,
+             "bodyTemplateTitle" : this.t('GET_FACT_MESSAGE'),
+             "bodyTemplateContent" : randomFact,
+             "templateToken" : "factBodyTemplate",
+             "askOrTell" : ":tell",
+             "sessionAttributes": {}
+          };
+          renderTemplate.call(this, content);
+        // } else {
+        // // Just use a card if the device doesn't support a card.
+        //   this.emit(':tellWithCard', speechOutput, this.t('SKILL_NAME'), randomFact);
+        // }
+    },
+    'AMAZON.HelpIntent': function () {
+        const speechOutput = this.t('HELP_MESSAGE');
+        const reprompt = this.t('HELP_MESSAGE');
+        this.emit(':ask', speechOutput, reprompt);
+    },
+    'AMAZON.CancelIntent': function () {
+        this.emit(':tell', this.t('STOP_MESSAGE'));
+    },
+    'AMAZON.StopIntent': function () {
+        this.emit(':tell', this.t('STOP_MESSAGE'));
+    },
+};
+
+exports.handler = function (event, context) {
+    const alexa = Alexa.handler(event, context);
+    alexa.APP_ID = APP_ID;
+    // To enable string internationalization (i18n) features, set a resources object.
+    alexa.resources = languageStrings;
+    alexa.registerHandlers(handlers);
+    alexa.execute();
+};
+
+
+//==============================================================================
+//=========================== Helper Functions  ================================
+//==============================================================================
+
+function supportsDisplay() {
+  var hasDisplay =
+    this.event.context &&
+    this.event.context.System &&
+    this.event.context.System.device &&
+    this.event.context.System.device.supportedInterfaces &&
+    this.event.context.System.device.supportedInterfaces.Display
+
+  return hasDisplay;
 }
 
-var Alexa = require("alexa-sdk");
-var parse = require('xml-parser');
-const axios = require('axios');
+function isSimulator() {
+  var isSimulator = !this.event.context; //simulator doesn't send context
+  return isSimulator;
+}
 
-const axiosCookieJarSupport = require('@3846masa/axios-cookiejar-support');
-const tough = require('tough-cookie');
-var Cookie = tough.Cookie;
-//
-axiosCookieJarSupport(axios);
-const cookieJar = new tough.CookieJar();
+function renderTemplate (content) {
 
-var instance = axios.create({
-  timeout: 30000,
-  jar: cookieJar, // tough.CookieJar or boolean
-  withCredentials: true,
-  headers: {
-    'Accept-Language': 'ru;q=1',
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'User-Agent': 'Mobile Device'
-
-  }
-});
+  //create a template for each screen you want to display.
+  //This example has one that I called "factBodyTemplate".
+  //define your templates using one of several built in Display Templates
+  //https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/display-interface-reference#display-template-reference
 
 
-var aut = function(addr) {
-  return instance.post(addr)
-};
+   switch(content.templateToken) {
+       case "factBodyTemplate":
+          // for reference, here's an example of the content object you'd
+          // pass in for this template.
+          //  var content = {
+          //     "hasDisplaySpeechOutput" : "display "+speechOutput,
+          //     "hasDisplayRepromptText" : randomFact,
+          //     "simpleCardTitle" : this.t('SKILL_NAME'),
+          //     "simpleCardContent" : randomFact,
+          //     "bodyTemplateTitle" : this.t('GET_FACT_MESSAGE'),
+          //     "bodyTemplateContent" : randomFact,
+          //     "templateToken" : "factBodyTemplate",
+          //     "sessionAttributes": {}
+          //  };
 
-
-exports.handler = function(event, context, callback) {
-  var alexa = Alexa.handler(event, context);
-  alexa.registerHandlers(newSessionHandlers, guessModeHandlers, startGameHandlers);
-  alexa.execute();
-};
-
-// var handlers = {
-// 'LaunchRequest': function() {
-//   this.emit('SayHello');
-// },
-//
-// SayHello: function() {
-//   this.emit(':ask', 999, 222);
-// },
-//   travelintent: function() {
-//     this.emit(':ask', "from handlers", 222);
-//   }
-// };
-
-var states = {
-  GUESSMODE: '_GUESSMODE', // User is trying to guess the number.
-  STARTMODE: '_STARTMODE', // Prompt the user to start or restart the game.
-  ENDMODE: '_ENDMODE'
-};
-
-var newSessionHandlers = {
-  'NewSession': function() {
-    this.handler.state = states.STARTMODE;
-    this.emit(':ask', 'Welcome ');
-    //'Say yes to start the game or no to quit.
-  }
-};
-
-
-
-
-
-
-
-
-
-var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
-      'NewSession': function() {
-        this.emit('NewSession'); // Uses the handler in newSessionHandlers
-      },
-
-      'HelloWorldIntent': function() {
-
-
-
-        var cardTitle = 'Hello World Card';
-        var cardContent = '<font size="2"> small (28px) </font>This text will be displayed in the companion app card.';
-
-        var imageObj = {
-          smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
-          largeImageUrl: 'https://imgs.xkcd.com/comics/standards.png'
-        };
-
-        var permissionArray = ['read::alexa:device:all:address'];
-
-        var updatedIntent = this.event.request.intent;
-
-        var slotToElicit = "Slot to elicit";
-
-        var slotToConfirm = "Slot to confirm";
-
-        //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-
-        this.emit(':tellWithCard', cardContent, cardTitle, cardContent);
-
-
-
-
-
-/*
-        var promise = new Promise(function(resolve, reject) {
-
-
-
-
-          aut(PSI_ROZA.HOST +
-              '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-              '&version=' + GLOBALS.VERSION +
-              '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-              GLOBALS.DEVID).then(res => {
-              var obj = parse(res.data);
-              //console.log(obj);
-              //console.log(obj['root']['children'][0]['children'][0]['content']);
-              return obj['root']['children'][2]['children'][0]['content'];
-
-            }).then(mGUID => {
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-                mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone").then(() => {
-                return mGUID;
-              })
-
-            }).then(mGUID => {
-
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-                mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone" +
-                "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-                GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-                var obj = parse(res.data);
-                //console.log(res.data);
-                var v2 = obj['root']['children'][2]['children'][1]['content'];
-
-                return v2;
-              })
-
-            }).then(token => {
-
-              return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                "/postCSALogin.do?token=" + token).then(res => {})
-
-            }).then(() => {
-              return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                "/private/payments/list.do?from=08.11.2015&to=31.03.2018&paginationSize=20&paginationOffset=0"
-              ).then(res => {
-                return res
-              });
-
-
-            }).then((res) => {
-
-              var obj = parse(res.data);
-
-
-
-
-
-              var arr2 = [];
-              var myobj = {};
-              var k = function(obj) {
-
-                if (Array.isArray(obj)) {
-
-                  obj.forEach(function(item, i) {
-                    k(item);
-                  });
-                } else {
-                  if (obj.name == 'operation') {
-                    //console.log(obj.children[1]);
-                    arr2.push(obj.children)
-                  } else {
-                    k(obj.children)
-                  }
-                }
-              };
-
-
-              //console.log(obj.root);
-              k(obj.root);
-
-              //console.log(arr2[0][0]);
-
-
-              var arr3 = [];
-                   arr2.forEach(function(item, i) {
-                     var ob = {};
-                     item.forEach(function(item2, i2) {
-                       if (item2.name == 'type') {
-                         ob.type = item2.content
+           var response = {
+             "version": "1.0",
+             "response": {
+               "directives": [
+                 {
+                   "type": "Display.RenderTemplate",
+                   "template": {
+                     "type": "BodyTemplate3",
+                     "title": "my title",//content.bodyTemplateTitle,
+                     "token": content.templateToken,
+                     "textContent": {
+                       "primaryText": {
+                         "type": "RichText",
+                         "text": "<font size = '1'>"+content.bodyTemplateContent+"</font>"
                        }
-                       if (item2.name == 'form') {
-                         ob.form = item2.content
-                       }
-                       if (item2.name == 'date') {
-                         ob.date = item2.content
-                       }
-                       if (item2.name == 'operationAmount') {
-                         item2.children.forEach(function(item3, i3) {
-                           if (item3.name == 'amount') {
-                             ob.amount = item3.content;
-                           }
-                           if (item3.name == 'currency') {
-                             ob.code = item3.children[0].content;
-                           }
-                         });
-                       }
-                     });
-                     arr3.push(ob)
-                       //console.log(item[0]);
-                   });
-                   var str = "";
+                     },
+                     "backButton": "HIDDEN"
+                   }
+                 }
+               ],
+               "outputSpeech": {
+                 "type": "SSML",
+                 "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+               },
+               "reprompt": {
+                 "outputSpeech": {
+                   "type": "SSML",
+                   "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+                 }
+               },
+               "shouldEndSession": content.askOrTell==":tell",
+               "card": {
+                 "type": "Simple",
+                 "title": content.simpleCardTitle,
+                 "content": content.simpleCardContent
+               }
+             },
+             "sessionAttributes": content.sessionAttributes
+           }
+           this.context.succeed(response);
+           break;
 
-                   arr3.forEach(function(item, i) {
-                     str += item.type + " :: " + item.form + " :: " + item.date +
-                       " :: " + item.amount + " :: " + item.code + "\n";
-                   });
-                   //console.log(str);
+       default:
+           this.emit(':tell', "Thanks for chatting, goodbye");
+   }
 
-              resolve(str);
-            })
-            .catch(res => {
-              reject(0);
-              // reject(0);
-              //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
-            });
-
-        });
-
-        promise.then(res => {
-          var cardTitle = 'Hello World Card';
-          var cardContent = '<font size="2"> small (28px) </font>This text will be displayed in the companion app card.';
-
-          var imageObj = {
-            smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
-            largeImageUrl: 'https://imgs.xkcd.com/comics/standards.png'
-          };
-
-          var permissionArray = ['read::alexa:device:all:address'];
-
-          var updatedIntent = this.event.request.intent;
-
-          var slotToElicit = "Slot to elicit";
-
-          var slotToConfirm = "Slot to confirm";
-
-          //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-
-          this.emit(':tellWithCard', cardContent, cardTitle, cardContent);
-
-        }).catch(res => {
-          //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
-        });
-*/
-
-
-
-      },
-    // var promise = new Promise(function(resolve, reject) {
-    //
-    //     aut(PSI_ROZA.HOST +
-    //         '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-    //         '&version=' + GLOBALS.VERSION +
-    //         '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-    //         GLOBALS.DEVID).then(res => {
-    //         var obj = parse(res.data);
-    //         //console.log(obj);
-    //         //console.log(obj['root']['children'][0]['children'][0]['content']);
-    //         return obj['root']['children'][2]['children'][0]['content'];
-    //
-    //       }).then(mGUID => {
-    //         //console.log(mGUID);
-    //         return aut(PSI_ROZA.HOST +
-    //           "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-    //           mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-    //           ".10&appType=iPhone").then(() => {
-    //           return mGUID;
-    //         })
-    //
-    //       }).then(mGUID => {
-    //         //console.log(mGUID);
-    //         this.attributes['mGUID'] = mGUID;
-    //         return aut(PSI_ROZA.HOST +
-    //           "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-    //           mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-    //           ".10&appType=iPhone" +
-    //           "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-    //           GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-    //           var obj = parse(res.data);
-    //           //console.log(res.data);
-    //           return obj['root']['children'][2]['children'][1]['content'];
-    //         })
-    //
-    //       }).then(token => {
-    //         console.log(token);
-    //         return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-    //           "/postCSALogin.do?token=" + token).then(res => {
-    //
-    //           resolve(1);
-    //
-    //         });
-    //       })
-    //       .catch(res => {
-    //         reject(0);
-    //         //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
-    //       });
-    //
-    //   }); // end Promise
-
-
-
-
-
-
-                // var obj = parse(res.data);
-                // //console.log(res.data);
-                // //return obj.root.name;
-                // //
-                // var arr2 = [];
-                // var myobj = {};
-                // var k = function(obj) {
-                //
-                //   if (Array.isArray(obj)) {
-                //
-                //     obj.forEach(function(item, i) {
-                //       k(item);
-                //     });
-                //   } else {
-                //     if (obj.name == 'operation') {
-                //       //console.log(obj.children[1]);
-                //       arr2.push(obj.children)
-                //     } else {
-                //       k(obj.children)
-                //     }
-                //   }
-                // };
-                //
-                //
-                // //console.log(obj.root);
-                // k(obj.root);
-                //
-                // //console.log(arr2[0][0]);
-                //
-                //
-                // var arr3 = [];
-                // arr2.forEach(function(item, i) {
-                //   var ob = {};
-                //   item.forEach(function(item2, i2) {
-                //     if (item2.name == 'type') {
-                //       ob.type = item2.content
-                //     }
-                //     if (item2.name == 'form') {
-                //       ob.form = item2.content
-                //     }
-                //     if (item2.name == 'date') {
-                //       ob.date = item2.content
-                //     }
-                //     if (item2.name == 'operationAmount') {
-                //       item2.children.forEach(function(item3, i3) {
-                //         if (item3.name == 'amount') {
-                //           ob.amount = item3.content;
-                //         }
-                //         if (item3.name == 'currency') {
-                //           ob.code = item3.children[0].content;
-                //         }
-                //       });
-                //     }
-                //   });
-                //   arr3.push(ob)
-                //   //console.log(item[0]);
-                // });
-                // var str = "str: ";
-                // arr3.forEach(function(item, i) {
-                //   str +=item.type + " :: " + item.form + " :: " + item.date +  " :: " + item.amount + " :: " + item.code + "\n"
-                // });
-
-
-
-
-
-      //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-
-
-
-    /*
-            aut(PSI_ROZA.HOST +
-                '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-                '&version=' + GLOBALS.VERSION +
-                '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-                GLOBALS.DEVID).then(res => {
-                var obj = parse(res.data);
-                //console.log(obj);
-                console.log(obj['root']['children'][0]['children'][0]['content']);
-                return obj['root']['children'][2]['children'][0]['content'];
-
-              }).then(mGUID => {
-                console.log(mGUID);
-                return aut(PSI_ROZA.HOST +
-                  "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-                  mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-                  ".10&appType=iPhone").then(() => {
-                  return mGUID;
-                })
-
-              }).then(mGUID => {
-                console.log(mGUID);
-                this.attributes['mGUID'] = mGUID;
-                return aut(PSI_ROZA.HOST +
-                  "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-                  mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-                  ".10&appType=iPhone" +
-                  "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-                  GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-                  var obj = parse(res.data);
-                  //console.log(res.data);
-                  return obj['root']['children'][2]['children'][1]['content'];
-                })
-
-              }).then(token => {
-                console.log(token);
-                 return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                  "/postCSALogin.do?token=" + token).then(res => {
-
-                    var p = new Promise(function(resolve,reject){
-                      var obj = parse(res.data);
-                      //console.log(res.data);
-                      //return obj.root.name;
-                      //
-                      var arr2 = [];
-                      var myobj = {};
-                      var k = function(obj) {
-
-                        if (Array.isArray(obj)) {
-
-                          obj.forEach(function(item, i) {
-                            k(item);
-                          });
-                        } else {
-                          if (obj.name == 'operation') {
-                            //console.log(obj.children[1]);
-                            arr2.push(obj.children)
-                          } else {
-                            k(obj.children)
-                          }
-                        }
-                      };
-
-
-                      //console.log(obj.root);
-                      k(obj.root);
-
-                      //console.log(arr2[0][0]);
-
-
-                      var arr3 = [];
-                      arr2.forEach(function(item, i) {
-                        var ob = {};
-                        item.forEach(function(item2, i2) {
-                          if (item2.name == 'type') {
-                            ob.type = item2.content
-                          }
-                          if (item2.name == 'form') {
-                            ob.form = item2.content
-                          }
-                          if (item2.name == 'date') {
-                            ob.date = item2.content
-                          }
-                          if (item2.name == 'operationAmount') {
-                            item2.children.forEach(function(item3, i3) {
-                              if (item3.name == 'amount') {
-                                ob.amount = item3.content;
-                              }
-                              if (item3.name == 'currency') {
-                                ob.code = item3.children[0].content;
-                              }
-                            });
-                          }
-                        });
-                        arr3.push(ob)
-                        //console.log(item[0]);
-                      });
-                      var str = "str: ";
-                      arr3.forEach(function(item, i) {
-                        str +=item.type + " :: " + item.form + " :: " + item.date +  " :: " + item.amount + " :: " + item.code + "\n"
-                      });
-                      resolve(1);
-                    });
-                  return p.then(res=>{
-                    return res;
-                  }).cath(res=>{
-                    return "error";
-                  })
-    */
-
-
-    //this.emit(':ask', token, token);
-
-
-    //   }).then(res=>{
-    //
-    //                   //return obj['root']['children'][2]['children'][1]['content'];
-    //                   //var v = obj['root']['children'][2]['children'][3]['content'];
-    //                   //this.attributes['token'] = token;
-    //                   //this.handler.state = states.GUESSMODE;
-    //                   var cardTitle = 'Hello World Card';
-    //                   var cardContent = 'This text will be displayed in the companion app card.';
-    //
-    //                   var imageObj = {
-    //                     smallImageUrl: 'https://imgs.xkcd.com/comics/standards.png',
-    //                     largeImageUrl: 'https://imgs.xkcd.com/comics/standards.png'
-    //                   };
-    //
-    //                   var permissionArray = ['read::alexa:device:all:address'];
-    //
-    //                   var updatedIntent = this.event.request.intent;
-    //
-    //                   var slotToElicit = "Slot to elicit";
-    //
-    //                   var slotToConfirm = "Slot to confirm";
-    //
-    //                   //this.emit(':askWithCard', speechOutput, repromptSpeech, cardTitle, cardContent, imageObj);
-    //
-    //                   this.emit(':tellWithCard', "success", cardTitle, res+cardContent, imageObj);
-    //   });
-    // })
-    //
-    // .catch(function(error) {
-    //   console.log(error)
-    // });
-
-
-
-
-  travelintent: function() {
-    var self = this;
-    this.handler.state = states.GUESSMODE;
-    //this.attributes['name'] = this.event.request.intent.slots.MySlot.value;
-    //this.emit(':ask', 'Myitem', 'Try saying a number.');
-    //var e = this.event.request.intent.slots.About.value.toLowerCase();
-    this.emit(':ask', 'startGameHandlers', 'Try saying a number.');
-  },
-
-  'Unhandled': function() {
-    console.log("UNHANDLED");
-    var message = 'Repeat the name of the recipient.';
-    this.emit(':ask', message, message);
-  }
-});
-
-
-
-
-var guessModeHandlers = Alexa.CreateStateHandler(states.GUESSMODE, {
-  'NewSession': function() {
-
-    this.handler.state = '';
-    this.emitWithState('NewSession'); // Equivalent to the Start Mode NewSession handler
-  },
-  'HelloWorldIntent': function() {
-    this.emit(':ask', this.attributes['token'], this.attributes['mGUID']);
-  },
-  'Unhandled': function() {
-    //  this.handler.state = states.GUESSMODE;
-    this.emit(':ask', 'Sorry, I didn\'t get that. Try saying a number.', 'Try saying a number.');
-  },
-  'NotANum': function() {
-    this.emit(':ask', 'Sorry, I didn\'t get that. Try saying a number.', 'Try saying a number.');
-  }
-});
+}
