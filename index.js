@@ -100,168 +100,168 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
       'HelloWorldIntent': function() {
 
 
-
-        var promise = new Promise(function(resolve, reject) {
-
-
-
-
-          aut(PSI_ROZA.HOST +
-              '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-              '&version=' + GLOBALS.VERSION +
-              '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-              GLOBALS.DEVID).then(res => {
-              var obj = parse(res.data);
-              //console.log(obj);
-              //console.log(obj['root']['children'][0]['children'][0]['content']);
-              return obj['root']['children'][2]['children'][0]['content'];
-
-            }).then(mGUID => {
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-                mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone").then(() => {
-                return mGUID;
-              })
-
-            }).then(mGUID => {
-
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-                mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone" +
-                "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-                GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-                var obj = parse(res.data);
-                //console.log(res.data);
-                var v2 = obj['root']['children'][2]['children'][1]['content'];
-
-                return v2;
-              })
-
-            }).then(token => {
-
-              return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                "/postCSALogin.do?token=" + token).then(res => {})
-
-            }).then(() => {
-              return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                "/private/payments/list.do?from=08.11.2015&to=31.03.2018&paginationSize=20&paginationOffset=0"
-              ).then(res => {
-                return res
-              });
-
-
-            }).then((res) => {
-
-              var obj = parse(res.data);
-
-
-
-
-
-              var arr2 = [];
-              var myobj = {};
-              var k = function(obj) {
-
-                if (Array.isArray(obj)) {
-
-                  obj.forEach(function(item, i) {
-                    k(item);
-                  });
-                } else {
-                  if (obj.name == 'operation') {
-                    //console.log(obj.children[1]);
-                    arr2.push(obj.children)
-                  } else {
-                    k(obj.children)
-                  }
-                }
-              };
-
-
-              //console.log(obj.root);
-              k(obj.root);
-
-              //console.log(arr2[0][0]);
-
-
-              var arr3 = [];
-                   arr2.forEach(function(item, i) {
-                     var ob = {};
-                     item.forEach(function(item2, i2) {
-                       if (item2.name == 'type') {
-                         ob.type = item2.content
-                       }
-                       if (item2.name == 'form') {
-                         ob.form = item2.content
-                       }
-                       if (item2.name == 'date') {
-                         ob.date = item2.content
-                       }
-                       if (item2.name == 'operationAmount') {
-                         item2.children.forEach(function(item3, i3) {
-                           if (item3.name == 'amount') {
-                             ob.amount = item3.content;
-                           }
-                           if (item3.name == 'currency') {
-                             ob.code = item3.children[0].content;
-                           }
-                         });
-                       }
-                     });
-                     arr3.push(ob)
-                       //console.log(item[0]);
-                   });
-                   var str = "";
-
-                   arr3.forEach(function(item, i) {
-
-                    //  var date2 =  new Date(date.getFullYear(), date.getMonth(), date.getDate())
-                    //.split(T)[0]
-                     str += "<b>"+item.type+"</b>" + " | " + item.form + " | " + item.date.split("T")[0] +
-                       " | " + item.amount + " | " + item.code + "<br/>";
-                   });
-                   //console.log(str);
-
-              resolve(str);
-            })
-            .catch(res => {
-              reject(0);
-              // reject(0);
-              //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
-            });
-
-        });
-
-        promise.then(res => {
-
-
-
-          if(supportsDisplay.call(this)||isSimulator.call(this)) {
-            var content = {
-             "hasDisplaySpeechOutput" : "speechOutput",
-             "hasDisplayRepromptText" : "randomFact1",
-             "simpleCardTitle" :'SKILL_NAME',
-             "simpleCardContent" : "res",
-             "bodyTemplateTitle" : 'Payments:',
-             "bodyTemplateContent" : res,
-             "templateToken" : "factBodyTemplate",
-             "askOrTell" : ":tell",
-             "sessionAttributes": {}
-          };
-          renderTemplate.call(this, content);
-          }else {
-        // Just use a card if the device doesn't support a card.
-          this.emit(':tellWithCard', "speechOutput", "777", "randomFact");
-        }
-
-
-        }).catch(res => {
-          //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
-        });
-
-
+        // //
+        // // var promise = new Promise(function(resolve, reject) {
+        // //
+        // //
+        // //
+        // //
+        // //   aut(PSI_ROZA.HOST +
+        // //       '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
+        // //       '&version=' + GLOBALS.VERSION +
+        // //       '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
+        // //       GLOBALS.DEVID).then(res => {
+        // //       var obj = parse(res.data);
+        // //       //console.log(obj);
+        // //       //console.log(obj['root']['children'][0]['children'][0]['content']);
+        // //       return obj['root']['children'][2]['children'][0]['content'];
+        // //
+        // //     }).then(mGUID => {
+        // //       return aut(PSI_ROZA.HOST +
+        // //         "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
+        // //         mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
+        // //         ".10&appType=iPhone").then(() => {
+        // //         return mGUID;
+        // //       })
+        // //
+        // //     }).then(mGUID => {
+        // //
+        // //       return aut(PSI_ROZA.HOST +
+        // //         "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
+        // //         mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
+        // //         ".10&appType=iPhone" +
+        // //         "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
+        // //         GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
+        // //         var obj = parse(res.data);
+        // //         //console.log(res.data);
+        // //         var v2 = obj['root']['children'][2]['children'][1]['content'];
+        // //
+        // //         return v2;
+        // //       })
+        // //
+        // //     }).then(token => {
+        // //
+        // //       return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
+        // //         "/postCSALogin.do?token=" + token).then(res => {})
+        // //
+        // //     }).then(() => {
+        // //       return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
+        // //         "/private/payments/list.do?from=08.11.2015&to=31.03.2018&paginationSize=20&paginationOffset=0"
+        // //       ).then(res => {
+        // //         return res
+        // //       });
+        // //
+        // //
+        // //     }).then((res) => {
+        // //
+        // //       var obj = parse(res.data);
+        // //
+        // //
+        // //
+        // //
+        // //
+        // //       var arr2 = [];
+        // //       var myobj = {};
+        // //       var k = function(obj) {
+        // //
+        // //         if (Array.isArray(obj)) {
+        // //
+        // //           obj.forEach(function(item, i) {
+        // //             k(item);
+        // //           });
+        // //         } else {
+        // //           if (obj.name == 'operation') {
+        // //             //console.log(obj.children[1]);
+        // //             arr2.push(obj.children)
+        // //           } else {
+        // //             k(obj.children)
+        // //           }
+        // //         }
+        // //       };
+        // //
+        // //
+        // //       //console.log(obj.root);
+        // //       k(obj.root);
+        // //
+        // //       //console.log(arr2[0][0]);
+        // //
+        // //
+        // //       var arr3 = [];
+        // //            arr2.forEach(function(item, i) {
+        // //              var ob = {};
+        // //              item.forEach(function(item2, i2) {
+        // //                if (item2.name == 'type') {
+        // //                  ob.type = item2.content
+        // //                }
+        // //                if (item2.name == 'form') {
+        // //                  ob.form = item2.content
+        // //                }
+        // //                if (item2.name == 'date') {
+        // //                  ob.date = item2.content
+        // //                }
+        // //                if (item2.name == 'operationAmount') {
+        // //                  item2.children.forEach(function(item3, i3) {
+        // //                    if (item3.name == 'amount') {
+        // //                      ob.amount = item3.content;
+        // //                    }
+        // //                    if (item3.name == 'currency') {
+        // //                      ob.code = item3.children[0].content;
+        // //                    }
+        // //                  });
+        // //                }
+        // //              });
+        // //              arr3.push(ob)
+        // //                //console.log(item[0]);
+        // //            });
+        // //            var str = "";
+        // //
+        // //            arr3.forEach(function(item, i) {
+        // //
+        // //             //  var date2 =  new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        // //             //.split(T)[0]
+        // //              str += "<b>"+item.type+"</b>" + " | " + item.form + " | " + item.date.split("T")[0] +
+        // //                " | " + item.amount + " | " + item.code + "<br/>";
+        // //            });
+        // //            //console.log(str);
+        // //
+        // //       resolve(str);
+        // //     })
+        // //     .catch(res => {
+        // //       reject(0);
+        // //       // reject(0);
+        // //       //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
+        // //     });
+        // //
+        // // });
+        // //
+        // // promise.then(res => {
+        // //
+        // //
+        // //
+        // //   if(supportsDisplay.call(this)||isSimulator.call(this)) {
+        // //     var content = {
+        // //      "hasDisplaySpeechOutput" : "speechOutput",
+        // //      "hasDisplayRepromptText" : "randomFact1",
+        // //      "simpleCardTitle" :'SKILL_NAME',
+        // //      "simpleCardContent" : "res",
+        // //      "bodyTemplateTitle" : 'Payments:',
+        // //      "bodyTemplateContent" : res,
+        // //      "templateToken" : "factBodyTemplate",
+        // //      "askOrTell" : ":tell",
+        // //      "sessionAttributes": {}
+        // //   };
+        // //   renderTemplate.call(this, content);
+        // //   }else {
+        // // // Just use a card if the device doesn't support a card.
+        // //   this.emit(':tellWithCard', "speechOutput", "777", "randomFact");
+        // // }
+        // //
+        //
+        // }).catch(res => {
+        //   //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
+        // });
+        //
+        //
 
 
       },
@@ -307,7 +307,7 @@ var guessModeHandlers = Alexa.CreateStateHandler(states.GUESSMODE, {
 });
 
 
-
+/*
 function supportsDisplay() {
   var hasDisplay =
     this.event.context &&
@@ -367,3 +367,4 @@ function renderTemplate (content) {
            }
            this.context.succeed(response);
 }
+*/
