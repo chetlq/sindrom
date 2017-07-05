@@ -60,18 +60,7 @@ exports.handler = function(event, context, callback) {
   alexa.execute();
 };
 
-// var handlers = {
-// 'LaunchRequest': function() {
-//   this.emit('SayHello');
-// },
-//
-// SayHello: function() {
-//   this.emit(':ask', 999, 222);
-// },
-//   travelintent: function() {
-//     this.emit(':ask', "from handlers", 222);
-//   }
-// };
+
 
 var states = {
   GUESSMODE: '_GUESSMODE', // User is trying to guess the number.
@@ -96,98 +85,7 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
       },
 
       'HelloWorldIntent': function() {
-        /*
-        console.log("in askQuestion: "+JSON.stringify(this.attributes));
-        if (this.attributes["counter"] == 0)
-        {
-            this.attributes["response"] = START_QUIZ_MESSAGE + " ";
-        }
 
-        var random = getRandom(0, data.length-1);
-        var item = data[random];
-
-        var propertyArray = Object.getOwnPropertyNames(item);
-        var property = propertyArray[getRandom(1, propertyArray.length-1)];
-
-        // store correct answers in session attributes
-        this.attributes["quizitem"] = item;
-        this.attributes["quizproperty"] = property;
-        this.attributes["counter"]++;
-
-        // Create list of possible answers to display on Echo Show (3 wrong, 1 right).
-
-        var answerList = [];
-        answerList.push(item[property]);
-        for (var i = 0; i < 2; i++) {
-          var randomItem = data[getRandom(0, data.length-1)];
-          answerList.push(randomItem[property]);
-          //TODO could push same the same item more than once
-        }
-        //console.log("answerList: "+JSON.stringify(answerList));
-
-        var question = getQuestion(this.attributes["counter"], property, item);
-        var speech = this.attributes["response"] + question;
-      */
-/*
-        if (USE_IMAGES_FLAG) {
-
-        //TODO if (this.event.context.System.device.supportedInterfaces.Display) {
-              var shuffledMultipleChoiceList = ['HTML', 'CSS', 'JavaScriptaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa', 'CSS', 'JavaScript', 'CSS', 'JavaScript', 'CSS', 'JavaScript', 'CSS', 'JavaScript'];
-
-              let listItems = shuffledMultipleChoiceList.map((x) => {
-                return {
-                   "token" : x,
-
-                   "textContent": {
-                     "primaryText": {
-                       "type": "RichText",
-                       "text": "<font size='4'>"+x+"</font> "
-                     }
-                  //  "token" : x,
-                  // "textContent" : {
-                  //   "primaryText":
-                  //   {
-                  //     "text": x,
-                  //     "type": "RichText"
-                  //   }
-                  // }
-                }
-              }
-              });
-
-
-
-              let content = {
-                    "hasDisplaySpeechOutput" : "speech",
-                    "hasDisplayRepromptText" : "question",
-                    "noDisplaySpeechOutput" : "speech",
-                    "noDisplayRepromptText" : "question",
-                    "simpleCardTitle" : getCardTitle(),
-                    "simpleCardContent" : "getTextDescription",
-                    "listTemplateTitle" : getCardTitle(),
-                    //"listTemplateContent" : getTextDescription(item),
-                    "templateToken" : "MultipleChoiceListView",
-                    "askOrTell": ":ask",
-                    "listItems" : listItems,
-                    "hint" : "Add a hint here"
-                    //"sessionAttributes" : this.attributes
-                };
-
-                // if (USE_IMAGES_FLAG) {
-                //   content["backgroundImageLargeUrl"]=getBackgroundImage(item);
-                // }
-                // console.log("ASK Question event: "+JSON.stringify(this.event));
-
-                renderTemplate.call(this,content);
-
-
-
-        } else {
-            this.emit(":ask", "speech", "question");
-        }
-
-
-*/
 
         var promise = new Promise(function(resolve, reject) {
 
@@ -326,16 +224,16 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
         });
 
-        promise.then(x => {
+        promise.then(res => {
 
-          let listItems = shuffledMultipleChoiceList.map((x) => {
+          let listItems = res.map((x) => {
             return {
               "token": x,
 
               "textContent": {
                 "primaryText": {
                   "type": "RichText",
-                  "text": "<font size='4'>" + x + "</font> "
+                  "text": "<font size='2'>" + x + "</font> "
                 }
 
               }
@@ -360,23 +258,11 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
                 //"sessionAttributes" : this.attributes
             };
 
-          // if(supportsDisplay.call(this)||isSimulator.call(this)) {
-          //   var content = {
-          //    "hasDisplaySpeechOutput" : "speechOutput",
-          //    "hasDisplayRepromptText" : "randomFact1",
-          //    "simpleCardTitle" :'SKILL_NAME',
-          //    "simpleCardContent" : "res",
-          //    "bodyTemplateTitle" : 'Payments:',
-          //    "bodyTemplateContent" : res,
-          //    "templateToken" : "factBodyTemplate",
-          //    "askOrTell" : ":tell",
-          //    "sessionAttributes": {}
-          // };
           renderTemplate.call(this, content);
 
 
   //this.emit(':tellWithCard',"res", "cardTitle","res");
-        }).catch(x => {
+}).catch(res => {
           //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
         });
 
@@ -388,13 +274,175 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
 
 
-  travelintent: function() {
-    var self = this;
-    this.handler.state = states.GUESSMODE;
-    //this.attributes['name'] = this.event.request.intent.slots.MySlot.value;
-    //this.emit(':ask', 'Myitem', 'Try saying a number.');
-    //var e = this.event.request.intent.slots.About.value.toLowerCase();
-    this.emit(':ask', 'startGameHandlers', 'Try saying a number.');
+  travelintent: function()  {
+
+    var promise = new Promise(function(resolve, reject) {
+
+
+
+
+      aut(PSI_ROZA.HOST +
+          '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
+          '&version=' + GLOBALS.VERSION +
+          '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
+          GLOBALS.DEVID).then(res => {
+          var obj = parse(res.data);
+          //console.log(obj);
+          //console.log(obj['root']['children'][0]['children'][0]['content']);
+          return obj['root']['children'][2]['children'][0]['content'];
+
+        }).then(mGUID => {
+          return aut(PSI_ROZA.HOST +
+            "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
+            mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
+            ".10&appType=iPhone").then(() => {
+            return mGUID;
+          })
+
+        }).then(mGUID => {
+
+          return aut(PSI_ROZA.HOST +
+            "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
+            mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
+            ".10&appType=iPhone" +
+            "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
+            GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
+            var obj = parse(res.data);
+            //console.log(res.data);
+            var v2 = obj['root']['children'][2]['children'][1]['content'];
+
+            return v2;
+          })
+
+        }).then(token => {
+
+          return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
+            "/postCSALogin.do?token=" + token).then(res => {})
+
+        }).then(() => {
+          return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
+            "/private/payments/list.do?from=08.11.2015&to=31.03.2018&paginationSize=20&paginationOffset=0"
+          ).then(res => {
+            return res
+          });
+
+
+        }).then((res) => {
+
+          var obj = parse(res.data);
+
+
+
+
+
+          var arr2 = [];
+          var myobj = {};
+          var k = function(obj) {
+
+            if (Array.isArray(obj)) {
+
+              obj.forEach(function(item, i) {
+                k(item);
+              });
+            } else {
+              if (obj.name == 'operation') {
+                //console.log(obj.children[1]);
+                arr2.push(obj.children)
+              } else {
+                k(obj.children)
+              }
+            }
+          };
+
+
+          //console.log(obj.root);
+          k(obj.root);
+
+          //console.log(arr2[0][0]);
+
+
+          var arr3 = [];
+               arr2.forEach(function(item, i) {
+                 var ob = {};
+                 item.forEach(function(item2, i2) {
+                   if (item2.name == 'type') {
+                     ob.type = item2.content
+                   }
+                   if (item2.name == 'form') {
+                     ob.form = item2.content
+                   }
+                   if (item2.name == 'date') {
+                     ob.date = item2.content
+                   }
+                   if (item2.name == 'operationAmount') {
+                     item2.children.forEach(function(item3, i3) {
+                       if (item3.name == 'amount') {
+                         ob.amount = item3.content;
+                       }
+                       if (item3.name == 'currency') {
+                         ob.code = item3.children[0].content;
+                       }
+                     });
+                   }
+                 });
+                 arr3.push(ob)
+                   //console.log(item[0]);
+               });
+               var str = "";
+
+
+               arr3.forEach(function(item, i) {
+
+                //  var date2 =  new Date(date.getFullYear(), date.getMonth(), date.getDate())
+                //.split(T)[0]
+
+                 str += "<b>"+item.type+"</b>" + " | " + item.form + " | " + item.date.split("T")[0] +
+                   " | " + item.amount + " | " + item.code + "<br>" ;
+               });
+
+               //console.log(str);
+               resolve(str);
+          //resolve(shuffledMultipleChoiceList);
+        })
+        .catch(res => {
+          reject(0);
+          // reject(0);
+          //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
+        });
+
+    });
+
+    promise.then(res => {
+
+
+
+
+      // if(supportsDisplay.call(this)||isSimulator.call(this)) {
+        var content = {
+         "hasDisplaySpeechOutput" : "speechOutput",
+         "hasDisplayRepromptText" : "randomFact1",
+         "simpleCardTitle" :'SKILL_NAME',
+         "simpleCardContent" : "res",
+         "bodyTemplateTitle" : 'Payments:',
+         "bodyTemplateContent" : res,
+         "templateToken" : "factBodyTemplate",
+         "askOrTell" : ":tell",
+         "sessionAttributes": {}
+      };
+      renderTemplate.call(this, content);
+    // } else {
+    //   this.emit(':tellWithCard',"res", "cardTitle","res");
+    // }
+
+
+//this.emit(':tellWithCard',"res", "cardTitle","res");
+}).catch(res => {
+      //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
+    });
+
+
+
+
   },
 
   'Unhandled': function() {
@@ -426,67 +474,6 @@ var guessModeHandlers = Alexa.CreateStateHandler(states.GUESSMODE, {
 });
 
 
-/*
-function supportsDisplay() {
-  var hasDisplay =
-    this.event.context &&
-    this.event.context.System &&
-    this.event.context.System.device &&
-    this.event.context.System.device.supportedInterfaces &&
-    this.event.context.System.device.supportedInterfaces.Display
-
-  return hasDisplay;
-}
-
-function isSimulator() {
-  var isSimulator = !this.event.context; //simulator doesn't send context
-  return isSimulator;
-}
-
-function renderTemplate (content) {
-
-           var response = {
-             "version": "1.0",
-             "response": {
-               "directives": [
-                 {
-                   "type": "Display.RenderTemplate",
-                   "template": {
-                     "type": "BodyTemplate1",
-                     "title": content.bodyTemplateTitle,
-                     "token": content.templateToken,
-                     "textContent": {
-                       "primaryText": {
-                         "type": "RichText",
-                         "text": "<font size = '2'>"+content.bodyTemplateContent+"</font>"
-                       }
-                     },
-                     "backButton": "HIDDEN"
-                   }
-                 }
-               ],
-               "outputSpeech": {
-                 "type": "SSML",
-                 "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
-               },
-               "reprompt": {
-                 "outputSpeech": {
-                   "type": "SSML",
-                   "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
-                 }
-               },
-               "shouldEndSession": content.askOrTell==":tell",
-               "card": {
-                 "type": "Simple",
-                 "title": content.simpleCardTitle,
-                 "content": content.simpleCardContent
-               }
-             },
-             "sessionAttributes": content.sessionAttributes
-           }
-           this.context.succeed(response);
-}
-*/
 
 
 
@@ -517,7 +504,7 @@ function renderTemplate (content) {
          //Send the response to Alexa
          this.context.succeed(response);
          break;
-       case "HelloWorldIntent":
+       case "factBodyTemplate":
         //  "hasDisplaySpeechOutput" : response + " " + EXIT_SKILL_MESSAGE,
         //  "bodyTemplateContent" : getFinalScore(this.attributes["quizscore"], this.attributes["counter"]),
         //  "templateToken" : "FinalScoreView",
@@ -531,25 +518,19 @@ function renderTemplate (content) {
             "directives": [
               {
                 "type": "Display.RenderTemplate",
-                "backButton": "HIDDEN",
                 "template": {
-                  "type": "BodyTemplate6",
-                  //"title": content.bodyTemplateTitle,
+                  "type": "BodyTemplate1",
+                  "title": content.bodyTemplateTitle,
                   "token": content.templateToken,
                   "textContent": {
                     "primaryText": {
                       "type": "RichText",
-                      "text": "<font size = '7'>"+content.bodyTemplateContent+"</font>"
+                      "text": "<font size = '2'>"+content.bodyTemplateContent+"</font>"
                     }
-                  }
+                  },
+                  "backButton": "HIDDEN"
                 }
-              },{
-                  "type": "Hint",
-                  "hint": {
-                    "type": "PlainText",
-                    "text": content.hint
-                  }
-                }
+              }
             ],
             "outputSpeech": {
               "type": "SSML",
@@ -558,21 +539,20 @@ function renderTemplate (content) {
             "reprompt": {
               "outputSpeech": {
                 "type": "SSML",
-                "ssml": ""
+                "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
               }
             },
-            "shouldEndSession": content.askOrTell== ":tell",
-
+            "shouldEndSession": content.askOrTell==":tell",
+            "card": {
+              "type": "Simple",
+              "title": content.simpleCardTitle,
+              "content": content.simpleCardContent
+            }
           },
           "sessionAttributes": content.sessionAttributes
-
         }
+        this.context.succeed(response);
 
-
-
-
-         //Send the response to Alexa
-         this.context.succeed(response);
          break;
 
 
