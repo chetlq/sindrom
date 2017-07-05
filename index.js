@@ -87,17 +87,13 @@ var newSessionHandlers = {
 
 
 
-
-
-
-
-
 var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
       'NewSession': function() {
         this.emit('NewSession'); // Uses the handler in newSessionHandlers
       },
 
       'HelloWorldIntent': function() {
+
 
 
         // //
