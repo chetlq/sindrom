@@ -415,7 +415,7 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
     promise.then(res => {
 
 
-
+//this.emit(':tellWithCard',"res", "cardTitle",res);
 
       // if(supportsDisplay.call(this)||isSimulator.call(this)) {
         var content = {
@@ -500,11 +500,53 @@ function renderTemplate (content) {
    //
 
    switch(content.templateToken) {
-       case "WelcomeScreenView":
-         //Send the response to Alexa
-         this.context.succeed(response);
-         break;
+      //  case "WelcomeScreenView":
+      //    //Send the response to Alexa
+      //    this.context.succeed(response);
+      //    break;
        case "factBodyTemplate":
+       var response = {
+          "version": "1.0",
+          "response": {
+            "directives": [
+              {
+                "type": "Display.RenderTemplate",
+                "template": {
+                  "type": "ListTemplate1",
+                  "title": "123",
+                  "token": "123",
+                  "listItems":[],
+                  "backButton": "HIDDEN"
+                }
+              }
+            ],
+            "outputSpeech": {
+              "type": "SSML",
+              "ssml": "<speak>"+"123"+"</speak>"
+            },
+            "reprompt": {
+              "outputSpeech": {
+                "type": "SSML",
+                "ssml": "<speak>"+"123"+"</speak>"
+              }
+            },
+            "shouldEndSession": false,
+            "card": {
+              "type": "Simple",
+              "title": "123",
+              "content":"123"
+            }
+          },
+            "sessionAttributes": content.sessionAttributes
+
+       }
+       this.context.succeed(response);
+
+
+
+
+
+       //this.emit(':tellWithCard',"res", "cardTitle",content.templateToken+content.bodyTemplateContent);
         //  "hasDisplaySpeechOutput" : response + " " + EXIT_SKILL_MESSAGE,
         //  "bodyTemplateContent" : getFinalScore(this.attributes["quizscore"], this.attributes["counter"]),
         //  "templateToken" : "FinalScoreView",
@@ -512,46 +554,74 @@ function renderTemplate (content) {
         //  "hint":"start a quiz",
         //  "sessionAttributes" : this.attributes
         //  "backgroundImageUrl"
+        /*
         var response = {
-          "version": "1.0",
-          "response": {
-            "directives": [
-              {
+            "version": "1.0",
+            "response": {
+              "directives": [{
                 "type": "Display.RenderTemplate",
                 "template": {
                   "type": "BodyTemplate1",
-                  "title": content.bodyTemplateTitle,
-                  "token": content.templateToken,
+                  "token": "string",
+                  "backButton": "VISIBLE",
+                  "backgroundImage": "Image",
+                  "title": "string",
                   "textContent": {
                     "primaryText": {
-                      "type": "RichText",
-                      "text": "<font size = '2'>"+content.bodyTemplateContent+"</font>"
+                      "text": "string",
+                      "type": "string"
+                    },
+                    "secondaryText": {
+                      "text": "string",
+                      "type": "string"
+                    },
+                    "tertiaryText": {
+                      "text": "string",
+                      "type": "string"
                     }
-                  },
-                  "backButton": "HIDDEN"
+                  }
                 }
-              }
-            ],
-            "outputSpeech": {
-              "type": "SSML",
-              "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
-            },
-            "reprompt": {
-              "outputSpeech": {
-                "type": "SSML",
-                "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
-              }
-            },
-            "shouldEndSession": content.askOrTell==":tell",
-            "card": {
-              "type": "Simple",
-              "title": content.simpleCardTitle,
-              "content": content.simpleCardContent
-            }
-          },
-          "sessionAttributes": content.sessionAttributes
-        }
-        this.context.succeed(response);
+              }]
+            }*/
+          // {
+          //   "directives": [
+          //     {
+          //       "type": "Display.RenderTemplate",
+          //       "template": {
+          //         "type": "BodyTemplate1",
+          //         "title": content.bodyTemplateTitle,
+          //         "token": content.templateToken,
+          //         "textContent": {
+          //           "primaryText": {
+          //             "type": "RichText",
+          //             "text": "<font size = '2'>"+content.bodyTemplateContent+"</font>"
+          //           }
+          //         },
+          //         "backButton": "HIDDEN"
+          //       }
+          //     }
+          //   ],
+          //   "outputSpeech": {
+          //     "type": "SSML",
+          //     "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+          //   },
+          //   "reprompt": {
+          //     "outputSpeech": {
+          //       "type": "SSML",
+          //       "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+          //     }
+          //   },
+          //   "shouldEndSession": content.askOrTell==":tell",
+          //   "card": {
+          //     "type": "Simple",
+          //     "title": content.simpleCardTitle,
+          //     "content": content.simpleCardContent
+          //   }
+          // },
+
+          //"sessionAttributes": content.sessionAttributes
+
+
 
          break;
 
