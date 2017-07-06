@@ -3,14 +3,16 @@
 // var date = new calendar();
 // console.log(date.removeTags("d?"));
 
+
+var dateOutOfRange = "Date is out of range please choose another date";
+
+
+// output for Alexa
+var output = "";
+
 var calendar = function(){
 
 
- this.removeTags = function(str) {
-    if (str) {
-        return str.replace(/<(?:.|\n)*?>/gm, '');
-    }
-}
 
  this.getDateFromSlot = function(rawDate) {
     // try to parse data
@@ -113,8 +115,8 @@ function getWeekData(res) {
 function w2date(year, wn, dayNb) {
     var day = 86400000;
 
-    var j10 = new Date(year, 0, 10, 12, 0, 0),
-        j4 = new Date(year, 0, 4, 12, 0, 0),
+    var j10 = new Date(year, 0, 10, 0, 0, 0),
+        j4 = new Date(year, 0, 4, 24, 0, 0),
         mon1 = j4.getTime() - j10.getDay() * day;
     return new Date(mon1 + ((wn - 1) * 7 + dayNb) * day);
 };
