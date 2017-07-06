@@ -1,19 +1,18 @@
+// for usevar
+// calendar = require('./calendar');
+// var date = new calendar();
+// console.log(date.removeTags("d?"));
+
 var calendar = function(){
 
 
-function removeTags(str) {
+ this.removeTags = function(str) {
     if (str) {
         return str.replace(/<(?:.|\n)*?>/gm, '');
     }
 }
 
-// Given an AMAZON.DATE slot value parse out to usable JavaScript Date object
-// Utterances that map to the weekend for a specific week (such as �this weekend�) convert to a date indicating the week number and weekend: 2015-W49-WE.
-// Utterances that map to a month, but not a specific day (such as �next month�, or �December�) convert to a date with just the year and month: 2015-12.
-// Utterances that map to a year (such as �next year�) convert to a date containing just the year: 2016.
-// Utterances that map to a decade convert to a date indicating the decade: 201X.
-// Utterances that map to a season (such as �next winter�) convert to a date with the year and a season indicator: winter: WI, spring: SP, summer: SU, fall: FA)
-function getDateFromSlot(rawDate) {
+ this.getDateFromSlot = function(rawDate) {
     // try to parse data
     var date = new Date(Date.parse(rawDate));
     var result;
@@ -111,7 +110,7 @@ function getWeekData(res) {
 }
 
 // Used to work out the dates given week numbers
-var w2date = function (year, wn, dayNb) {
+function w2date(year, wn, dayNb) {
     var day = 86400000;
 
     var j10 = new Date(year, 0, 10, 12, 0, 0),
