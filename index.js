@@ -54,6 +54,49 @@ var aut = function(addr) {
 };
 
 
+var connect = function(){
+  return aut(PSI_ROZA.HOST +
+      '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
+      '&version=' + GLOBALS.VERSION +
+      '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
+      GLOBALS.DEVID).then(res => {
+      var obj = parse(res.data);
+      //console.log(obj);
+      //console.log(obj['root']['children'][0]['children'][0]['content']);
+      return obj['root']['children'][2]['children'][0]['content'];
+
+    }).then(mGUID => {
+      return aut(PSI_ROZA.HOST +
+        "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
+        mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
+        ".10&appType=iPhone").then(() => {
+        return mGUID;
+      })
+
+    }).then(mGUID => {
+
+      return aut(PSI_ROZA.HOST +
+        "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
+        mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
+        ".10&appType=iPhone" +
+        "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
+        GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
+        var obj = parse(res.data);
+        //console.log(res.data);
+        var v2 = obj['root']['children'][2]['children'][1]['content'];
+
+        return v2;
+      })
+
+    }).then(token => {
+
+      return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
+        "/postCSALogin.do?token=" + token).then(res => {})
+
+    });
+}
+
+
 exports.handler = function(event, context, callback) {
   var alexa = Alexa.handler(event, context);
   alexa.registerHandlers(newSessionHandlers, guessModeHandlers, startGameHandlers);
@@ -67,8 +110,9 @@ var states = {
   STARTMODE: '_STARTMODE', // Prompt the user to start or restart the game.
   ENDMODE: '_ENDMODE'
 };
-
+var conn =  connect();
 var newSessionHandlers = {
+
   'NewSession': function() {
     this.handler.state = states.STARTMODE;
     this.emit(':ask', 'Welcome1 ');
@@ -92,45 +136,47 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
 
 
-          aut(PSI_ROZA.HOST +
-              '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-              '&version=' + GLOBALS.VERSION +
-              '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-              GLOBALS.DEVID).then(res => {
-              var obj = parse(res.data);
-              //console.log(obj);
-              //console.log(obj['root']['children'][0]['children'][0]['content']);
-              return obj['root']['children'][2]['children'][0]['content'];
+          // aut(PSI_ROZA.HOST +
+          //     '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
+          //     '&version=' + GLOBALS.VERSION +
+          //     '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
+          //     GLOBALS.DEVID).then(res => {
+          //     var obj = parse(res.data);
+          //     //console.log(obj);
+          //     //console.log(obj['root']['children'][0]['children'][0]['content']);
+          //     return obj['root']['children'][2]['children'][0]['content'];
+          //
+          //   }).then(mGUID => {
+          //     return aut(PSI_ROZA.HOST +
+          //       "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
+          //       mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
+          //       ".10&appType=iPhone").then(() => {
+          //       return mGUID;
+          //     })
+          //
+          //   }).then(mGUID => {
+          //
+          //     return aut(PSI_ROZA.HOST +
+          //       "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
+          //       mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
+          //       ".10&appType=iPhone" +
+          //       "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
+          //       GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
+          //       var obj = parse(res.data);
+          //       //console.log(res.data);
+          //       var v2 = obj['root']['children'][2]['children'][1]['content'];
+          //
+          //       return v2;
+          //     })
+          //
+          //   }).then(token => {
+          //
+          //     return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
+          //       "/postCSALogin.do?token=" + token).then(res => {})
+          //
+          //   }).
 
-            }).then(mGUID => {
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-                mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone").then(() => {
-                return mGUID;
-              })
-
-            }).then(mGUID => {
-
-              return aut(PSI_ROZA.HOST +
-                "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-                mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-                ".10&appType=iPhone" +
-                "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-                GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-                var obj = parse(res.data);
-                //console.log(res.data);
-                var v2 = obj['root']['children'][2]['children'][1]['content'];
-
-                return v2;
-              })
-
-            }).then(token => {
-
-              return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-                "/postCSALogin.do?token=" + token).then(res => {})
-
-            }).then(() => {
+            conn.then(() => {
               return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
                 "/private/payments/list.do?from=08.11.2015&to=31.03.2018&paginationSize=20&paginationOffset=0"
               ).then(res => {
@@ -276,50 +322,47 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
   travelintent: function()  {
 
+
     var promise = new Promise(function(resolve, reject) {
 
 
 
+      // aut(PSI_ROZA.HOST +
+      //     '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
+      //     '&version=' + GLOBALS.VERSION +
+      //     '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
+      //     GLOBALS.DEVID).then(res => {
+      //     var obj = parse(res.data);
+      //     //console.log(obj);
+      //     //console.log(obj['root']['children'][0]['children'][0]['content']);
+      //     return obj['root']['children'][2]['children'][0]['content'];
+      //
+      //   }).then(mGUID => {
+      //     return aut(PSI_ROZA.HOST +
+      //       "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
+      //       mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
+      //       ".10&appType=iPhone").then(() => {
+      //       return mGUID;
+      //     })
+      //
+      //   }).then(mGUID => {
+      //
+      //     return aut(PSI_ROZA.HOST +
+      //       "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
+      //       mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
+      //       ".10&appType=iPhone" +
+      //       "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
+      //       GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
+      //       var obj = parse(res.data);
+      //       //console.log(res.data);
+      //       var v2 = obj['root']['children'][2]['children'][1]['content'];
+      //
+      //       return v2;
+      //     })
+      //
+      //   }).
 
-      aut(PSI_ROZA.HOST +
-          '/CSAMAPI/registerApp.do?operation=register&login=' + PSI_ROZA.LOGIN +
-          '&version=' + GLOBALS.VERSION +
-          '.10&appType=iPhone&appVersion=5.5.0&deviceName=Simulator&devID=' +
-          GLOBALS.DEVID).then(res => {
-          var obj = parse(res.data);
-          //console.log(obj);
-          //console.log(obj['root']['children'][0]['children'][0]['content']);
-          return obj['root']['children'][2]['children'][0]['content'];
-
-        }).then(mGUID => {
-          return aut(PSI_ROZA.HOST +
-            "/CSAMAPI/registerApp.do?operation=confirm&mGUID=" +
-            mGUID + "&smsPassword=" + PSI_ROZA.SMS_PASS + "&version=" + GLOBALS.VERSION +
-            ".10&appType=iPhone").then(() => {
-            return mGUID;
-          })
-
-        }).then(mGUID => {
-
-          return aut(PSI_ROZA.HOST +
-            "/CSAMAPI/registerApp.do?operation=createPIN&mGUID=" +
-            mGUID + "&password=" + PSI_ROZA.PASS + "&version=" + GLOBALS.VERSION +
-            ".10&appType=iPhone" +
-            "&appVersion=5.5.0&deviceName=Simulator&isLightScheme=false&devID=" +
-            GLOBALS.DEVID + "&mobileSdkData=1").then(res => {
-            var obj = parse(res.data);
-            //console.log(res.data);
-            var v2 = obj['root']['children'][2]['children'][1]['content'];
-
-            return v2;
-          })
-
-        }).then(token => {
-
-          return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
-            "/postCSALogin.do?token=" + token).then(res => {})
-
-        }).then(() => {
+        conn.then(() => {
           return aut(PSI_ROZA.HOST_BLOCK + "/mobile" + GLOBALS.VERSION +
             "/private/payments/list.do?from=08.11.2015&to=31.03.2018&paginationSize=20&paginationOffset=0"
           ).then(res => {
@@ -395,16 +438,19 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
                 //  var date2 =  new Date(date.getFullYear(), date.getMonth(), date.getDate())
                 //.split(T)[0]
-
-                 str += "<b>"+item.type+"</b>" + " | " + item.form + " | " + item.date.split("T")[0] +
-                   " | " + item.amount + " | " + item.code + "<br>" ;
+                //"<b>"+item.type+"</b>" + " | " + item.form + " | " + item.date.split("T")[0] +
+                //  " | " + item.amount + " | " + item.code
+                 str +="<b>"+item.type+"</b>" + " | " + item.form + " | " + item.date.split("T")[0]+ " | " + item.amount + " | " + item.code +"<br/>" ;
                });
+console.log(str);
 
+resolve(str);
                //console.log(str);
-               resolve(str);
+
+
           //resolve(shuffledMultipleChoiceList);
         })
-        .catch(res => {
+          .catch(res => {
           reject(0);
           // reject(0);
           //this.emit(':tellWithCard', "success", cardTitle, res + cardContent, imageObj);
@@ -437,7 +483,7 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
 
 //this.emit(':tellWithCard',"res", "cardTitle","res");
 }).catch(res => {
-      //this.emit(':tellWithCard',res, cardTitle,res, imageObj);
+     this.emit(':tellWithCard',"res", "cardTitle","error");
     });
 
 
@@ -505,126 +551,49 @@ function renderTemplate (content) {
       //    this.context.succeed(response);
       //    break;
        case "factBodyTemplate":
-       var response = {
-          "version": "1.0",
-          "response": {
-            "directives": [
-              {
-                "type": "Display.RenderTemplate",
-                "template": {
-                  "type": "ListTemplate1",
-                  "title": "123",
-                  "token": "123",
-                  "listItems":[],
-                  "backButton": "HIDDEN"
-                }
-              }
-            ],
-            "outputSpeech": {
-              "type": "SSML",
-              "ssml": "<speak>"+"123"+"</speak>"
-            },
-            "reprompt": {
-              "outputSpeech": {
-                "type": "SSML",
-                "ssml": "<speak>"+"123"+"</speak>"
-              }
-            },
-            "shouldEndSession": false,
-            "card": {
-              "type": "Simple",
-              "title": "123",
-              "content":"123"
-            }
-          },
-            "sessionAttributes": content.sessionAttributes
+       //this.emit(':tellWithCard',"res", "cardTitle",content.templateToken);
 
-       }
-       this.context.succeed(response);
-
-
-
-
-
-       //this.emit(':tellWithCard',"res", "cardTitle",content.templateToken+content.bodyTemplateContent);
-        //  "hasDisplaySpeechOutput" : response + " " + EXIT_SKILL_MESSAGE,
-        //  "bodyTemplateContent" : getFinalScore(this.attributes["quizscore"], this.attributes["counter"]),
-        //  "templateToken" : "FinalScoreView",
-        //  "askOrTell": ":tell",
-        //  "hint":"start a quiz",
-        //  "sessionAttributes" : this.attributes
-        //  "backgroundImageUrl"
-        /*
-        var response = {
-            "version": "1.0",
-            "response": {
-              "directives": [{
-                "type": "Display.RenderTemplate",
-                "template": {
-                  "type": "BodyTemplate1",
-                  "token": "string",
-                  "backButton": "VISIBLE",
-                  "backgroundImage": "Image",
-                  "title": "string",
-                  "textContent": {
-                    "primaryText": {
-                      "text": "string",
-                      "type": "string"
-                    },
-                    "secondaryText": {
-                      "text": "string",
-                      "type": "string"
-                    },
-                    "tertiaryText": {
-                      "text": "string",
-                      "type": "string"
-                    }
-                  }
-                }
-              }]
-            }*/
-          // {
-          //   "directives": [
-          //     {
-          //       "type": "Display.RenderTemplate",
-          //       "template": {
-          //         "type": "BodyTemplate1",
-          //         "title": content.bodyTemplateTitle,
-          //         "token": content.templateToken,
-          //         "textContent": {
-          //           "primaryText": {
-          //             "type": "RichText",
-          //             "text": "<font size = '2'>"+content.bodyTemplateContent+"</font>"
-          //           }
-          //         },
-          //         "backButton": "HIDDEN"
-          //       }
-          //     }
-          //   ],
-          //   "outputSpeech": {
-          //     "type": "SSML",
-          //     "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
-          //   },
-          //   "reprompt": {
-          //     "outputSpeech": {
-          //       "type": "SSML",
-          //       "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
-          //     }
-          //   },
-          //   "shouldEndSession": content.askOrTell==":tell",
-          //   "card": {
-          //     "type": "Simple",
-          //     "title": content.simpleCardTitle,
-          //     "content": content.simpleCardContent
-          //   }
-          // },
-
-          //"sessionAttributes": content.sessionAttributes
-
-
-
-         break;
-
+           var response = {
+             "version": "1.0",
+             "response": {
+               "directives": [
+                 {
+                   "type": "Display.RenderTemplate",
+                   "template": {
+                     "type": "BodyTemplate1",
+                     "title": content.bodyTemplateTitle,
+                     "token": content.templateToken,
+                     "textContent": {
+                       "primaryText": {
+                         "type": "RichText",
+                         "text": "<font size = '3'>"+content.bodyTemplateContent+"</font>"
+                       }
+                     },
+                     "backButton": "HIDDEN"
+                   }
+                 }
+               ],
+               "outputSpeech": {
+                 "type": "SSML",
+                 "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+               },
+               "reprompt": {
+                 "outputSpeech": {
+                   "type": "SSML",
+                   "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+                 }
+               },
+               "shouldEndSession": content.askOrTell==":tell",
+               "card": {
+                 "type": "Simple",
+                 "title": content.simpleCardTitle,
+                 "content": content.simpleCardContent
+               }
+             },
+             "sessionAttributes": content.sessionAttributes
+           }
+           this.context.succeed(response);
+           break;
 
        case "MultipleChoiceListView":
        console.log ("listItems "+JSON.stringify(content.listItems));
