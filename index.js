@@ -29,6 +29,9 @@ var Alexa = require("alexa-sdk");
 var parse = require('xml-parser');
 const axios = require('axios');
 
+var date = require('./calendar');
+var calendar = new date();
+
 const axiosCookieJarSupport = require('@3846masa/axios-cookiejar-support');
 const tough = require('tough-cookie');
 var Cookie = tough.Cookie;
@@ -127,6 +130,71 @@ var startGameHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
       'NewSession': function() {
         this.emit('NewSession'); // Uses the handler in newSessionHandlers
       },
+      'eventIntent': function() {
+        this.handler.state = states.STARTMODE;
+        var eventList = new Array();
+        var slotValuefrom = this.event.request.intent.slots.datefrom.value;
+        var slotValueto = this.event.request.intent.slots.dateto.value;
+
+        if ((slotValuefrom != undefined) && (slotValueto != undefined)) {
+          var parent = this;
+
+          var eventDatefrom =  calendar.getDateFromSlot(slotValuefrom);
+          var eventDateto =  calendar.getDateFromSlot(slotValueto);
+
+          var start = {
+            year:new Date(eventDatefrom.startDate).getFullYear(),
+            month : new Date(eventDatefrom.startDate).getMonth(),
+            day :new Date(eventDatefrom.startDate).getDate(),
+          };
+          var end = {
+            year:new Date(eventDateto.endDate).getFullYear(),
+            month : new Date(eventDateto.endDate).getMonth(),
+            day :new Date(eventDateto.endDate).getDate(),
+          };
+          var startstr = start.year+"."+start.month+"."+start.day;
+          var endstr = end.year+"."+end.month+"."+end.day;
+          var str = "start: "+startstr+" - end: " + endstr;
+          this.emit(':askWithCard', 123, "haveEventsRepromt", "cardTitle", str);
+          //  this.emit(':ask', "start: "+new Date(eventDate.startDate)+" - end: " + new Date(eventDate.endDate), HelpMessage);
+        } else {
+          this.emit(":ask", "I'm sorry.  What day did you want me to look for events?", "I'm sorry.  What day did you want me to look for events?");
+        }
+
+      },
+
+      'searchIntent': function () {
+              this.handler.state = states.STARTMODE;
+            var eventList = new Array();
+              var slotValue = this.event.request.intent.slots.date.value;
+              if (slotValue != undefined)
+              {
+
+
+                  var eventDate = calendar.getDateFromSlot(slotValue);
+
+                //  this.emit(':ask', "start: "+new Date(eventDate.startDate)+" - end: " + new Date(eventDate.endDate), HelpMessage);
+                var start = {
+                  year:new Date(eventDate.startDate).getFullYear(),
+                  month : new Date(eventDate.startDate).getMonth(),
+                  day :new Date(eventDate.startDate).getDate(),
+                };
+                var end = {
+                  year:new Date(eventDate.endDate).getFullYear(),
+                  month : new Date(eventDate.endDate).getMonth(),
+                  day :new Date(eventDate.endDate).getDate(),
+                };
+                var startstr = start.year+"."+start.month+"."+start.day;
+                var endstr = end.year+"."+end.month+"."+end.day;
+                var str = "start: "+startstr+" - end: " + endstr;
+                this.emit(':askWithCard', eventDate.res, "haveEventsRepromt", "cardTitle", str);
+
+              }
+              else {
+                  this.emit(":ask", "I'm sorry.  What day did you want me to look for events?", "I'm sorry.  What day did you want me to look for events?");
+              }
+          },
+
       'SayHello': function(){
         //this.handler.state = states.STARTMODE;
         var response = {
